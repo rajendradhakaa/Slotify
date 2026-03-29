@@ -112,7 +112,7 @@ def get_available_slots(slug: str, date: str = Query(...), db: Session = Depends
         if not is_booked:
             slots.append({
                 "time": current_time.strftime("%H:%M"),
-                "datetime_utc": current_time.isoformat(),
+                "datetime": current_time.isoformat(),
             })
 
         current_time += duration

@@ -171,6 +171,21 @@ export default function BookingPage() {
     hour12: true,
   });
 
+  const formatSlotTime = (slot) => {
+    // Slot times are already in the correct timezone from the API
+    if (slot.time) {
+      // If API provides "time" field (HH:MM), parse and format it
+      const [hours, minutes] = slot.time.split(':').map(Number);
+      return new Date(2000, 0, 1, hours, minutes).toLocaleString('en-US', {
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: true,
+      });
+    }
+    // Fallback to full datetime formatting
+    return formatTime(slot.datetime || slot.datetime_utc);
+  };
+
   const handleSlotSelect = (slot) => {
     setSelectedTimeSlot(slot);
     setBookingError('');
@@ -190,7 +205,7 @@ export default function BookingPage() {
         event_type_id: eventType.id,
         invitee_name: formData.name,
         invitee_email: formData.email,
-        start_time: selectedTimeSlot.datetime_utc,
+        start_time: selectedTimeSlot.datetime,
       });
 
       sessionStorage.setItem(`booking_${slug}`, JSON.stringify(response));
@@ -548,12 +563,12 @@ export default function BookingPage() {
                   <div style={{ display: 'grid', gap: '0.75rem' }}>
                     {availableSlots.map((slot) => (
                       <button
-                        key={slot.datetime_utc}
+                        key={slot.datetime || slot.datetime_utc}
                         type="button"
-                        className={`slot-button ${selectedTimeSlot?.datetime_utc === slot.datetime_utc ? 'selected' : ''}`}
+                        className={`slot-button ${selectedTimeSlot?.datetime === slot.datetime && selectedTimeSlot?.time === slot.time ? 'selected' : ''}`}
                         onClick={() => handleSlotSelect(slot)}
                       >
-                        <span>{formatTime(slot.datetime_utc)}</span>
+                        <span>{formatSlotTime(slot)}</span>
                         <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
                           {eventType.duration} min
                         </span>
@@ -574,7 +589,7 @@ export default function BookingPage() {
                     Confirm your details
                   </h2>
                   <p className="helper-copy" style={{ marginTop: '0.3rem' }}>
-                    You are booking {formatShortDate(selectedTimeSlot.datetime_utc)} at {formatTime(selectedTimeSlot.datetime_utc)}.
+                    You are booking {formatShortDate(selectedTimeSlot.datetime)} at {formatSlotTime(selectedTimeSlot)}.
                   </p>
                 </div>
                 <button type="button" className="btn btn-outline" onClick={() => setSelectedTimeSlot(null)}>
