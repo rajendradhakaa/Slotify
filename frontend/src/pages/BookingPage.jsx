@@ -58,6 +58,8 @@ export default function BookingPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
+  const [useCustomTime, setUseCustomTime] = useState(false);
+  const [customTimeInput, setCustomTimeInput] = useState('');
   const [availableSlots, setAvailableSlots] = useState([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [formData, setFormData] = useState({ name: '', email: '' });
@@ -211,6 +213,35 @@ export default function BookingPage() {
 
   const handleSlotSelect = (slot) => {
     setSelectedTimeSlot(slot);
+    setUseCustomTime(false);
+    setCustomTimeInput('');
+    setBookingError('');
+  };
+
+  const handleCustomTimeSubmit = () => {
+    if (!customTimeInput || !selectedDate) {
+      setBookingError('Please enter a time and select a date');
+      return;
+    }
+
+    // Create a full datetime from selected date and custom time
+    const [hours, minutes] = customTimeInput.split(':').map(Number);
+    if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+      setBookingError('Invalid time format. Use HH:MM (24-hour format)');
+      return;
+    }
+
+    const customDateTime = new Date(selectedDate);
+    customDateTime.setHours(hours, minutes, 0);
+    const isoDateTime = customDateTime.toISOString().split('T')[0] + `T${customTimeInput}:00`;
+
+    const customSlot = {
+      time: customTimeInput,
+      datetime: isoDateTime,
+      isCustom: true,
+    };
+
+    setSelectedTimeSlot(customSlot);
     setBookingError('');
   };
 
@@ -297,6 +328,9 @@ export default function BookingPage() {
             onClick={() => {
               if (!isDisabled) {
                 setSelectedDate(cloneDay);
+                setSelectedTimeSlot(null);
+                setUseCustomTime(false);
+                setCustomTimeInput('');
               }
             }}
           >
@@ -584,19 +618,52 @@ export default function BookingPage() {
                   </div>
                 ) : (
                   <div style={{ display: 'grid', gap: '0.75rem' }}>
-                    {availableSlots.map((slot) => (
+                    <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-secondary)' }}>Available times</span>
                       <button
-                        key={slot.datetime || slot.datetime_utc}
                         type="button"
-                        className={`slot-button ${selectedTimeSlot?.datetime === slot.datetime && selectedTimeSlot?.time === slot.time ? 'selected' : ''}`}
-                        onClick={() => handleSlotSelect(slot)}
+                        className="btn btn-outline"
+                        onClick={() => setUseCustomTime(!useCustomTime)}
+                        style={{ minHeight: '32px', padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
                       >
-                        <span>{formatSlotTime(slot)}</span>
-                        <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
-                          {eventType.duration} min
-                        </span>
+                        {useCustomTime ? '← Back to slots' : 'Custom time →'}
                       </button>
-                    ))}
+                    </div>
+                    {useCustomTime ? (
+                      <div style={{ display: 'grid', gap: '0.75rem', padding: '1rem', borderRadius: '16px', background: 'rgba(20, 87, 255, 0.06)', border: '1px solid rgba(20, 87, 255, 0.12)' }}>
+                        <label className="form-label">Enter time (HH:MM)</label>
+                        <input
+                          type="time"
+                          className="form-input"
+                          value={customTimeInput}
+                          onChange={(e) => setCustomTimeInput(e.target.value)}
+                          min="00:00"
+                          max="23:59"
+                        />
+                        <button
+                          type="button"
+                          className="btn btn-primary"
+                          onClick={handleCustomTimeSubmit}
+                          style={{ marginTop: '0.5rem' }}
+                        >
+                          Book this time
+                        </button>
+                      </div>
+                    ) : (
+                      availableSlots.map((slot) => (
+                        <button
+                          key={slot.datetime || slot.datetime_utc}
+                          type="button"
+                          className={`slot-button ${selectedTimeSlot?.datetime === slot.datetime && selectedTimeSlot?.time === slot.time ? 'selected' : ''}`}
+                          onClick={() => handleSlotSelect(slot)}
+                        >
+                          <span>{formatSlotTime(slot)}</span>
+                          <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                            {eventType.duration} min
+                          </span>
+                        </button>
+                      ))
+                    )}
                   </div>
                 )}
               </div>
