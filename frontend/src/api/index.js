@@ -56,4 +56,11 @@ export const bookingsApi = {
   cancel: (id) => api.patch(`/bookings/${id}/cancel`).then(res => res.data),
 };
 
+export const authApi = {
+  register: (data) => api.post('/auth/register', data).then(res => res.data),
+  login: (data) => api.post('/auth/login', data).then(res => res.data),
+  providers: () => api.get('/auth/providers').then(res => res.data),
+  oauthUrl: (provider) => `${apiBaseUrl}/auth/${provider}`,
+};
+
 export default api;

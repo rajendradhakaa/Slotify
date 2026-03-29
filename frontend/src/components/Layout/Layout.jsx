@@ -91,7 +91,7 @@ function BrandLockup({ collapsed = false }) {
   );
 }
 
-export default function Layout({ theme = 'light', onToggleTheme }) {
+export default function Layout({ theme = 'light', onToggleTheme, onLogout, authUser }) {
   const location = useLocation();
   const isCompact = useMediaQuery('(max-width: 960px)');
   const isMediumDesktop = useMediaQuery('(max-width: 1240px)');
@@ -185,6 +185,16 @@ export default function Layout({ theme = 'light', onToggleTheme }) {
               >
                 R
               </div>
+              {onLogout ? (
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={onLogout}
+                  style={{ minHeight: '40px' }}
+                >
+                  Logout
+                </button>
+              ) : null}
             </div>
           </div>
         </header>
@@ -465,11 +475,22 @@ export default function Layout({ theme = 'light', onToggleTheme }) {
             </div>
             {!isSidebarCollapsed && (
               <div>
-                <div style={{ fontWeight: 700 }}>Rajendra Dhaka</div>
-                <div style={{ color: 'rgba(255, 255, 255, 0.56)', fontSize: '0.84rem' }}>Workspace owner</div>
+                <div style={{ fontWeight: 700 }}>{authUser?.name || 'Workspace user'}</div>
+                <div style={{ color: 'rgba(255, 255, 255, 0.56)', fontSize: '0.84rem' }}>{authUser?.email || 'Signed in'}</div>
               </div>
             )}
           </div>
+
+          {onLogout ? (
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={onLogout}
+              style={{ width: '100%' }}
+            >
+              Logout
+            </button>
+          ) : null}
         </div>
       </aside>
 

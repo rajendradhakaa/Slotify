@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import inspect, text
 from .database import engine, Base, SessionLocal
 from .models import User, EventType, AvailabilityRule
 from .routers import event_types, availability, bookings, users, auth
@@ -27,10 +28,32 @@ app.include_router(users.compat_router)
 app.include_router(auth.router)
 
 
+def ensure_auth_columns():
+    inspector = inspect(engine)
+    try:
+        columns = {column["name"] for column in inspector.get_columns("users")}
+    except Exception:
+        return
+
+    statements = []
+    if "password_hash" not in columns:
+        statements.append("ALTER TABLE users ADD COLUMN password_hash VARCHAR(255)")
+    if "auth_provider" not in columns:
+        statements.append("ALTER TABLE users ADD COLUMN auth_provider VARCHAR(50) DEFAULT 'local'")
+
+    if not statements:
+        return
+
+    with engine.begin() as connection:
+        for sql in statements:
+            connection.execute(text(sql))
+
+
 @app.on_event("startup")
 def startup():
     """Create tables and seed default data on startup."""
     Base.metadata.create_all(bind=engine)
+    ensure_auth_columns()
 
     # Seed default user if not exists
     db = SessionLocal()
@@ -40,6 +63,7 @@ def startup():
             user = User(
                 name="Rajendra Dhaka",
                 email="rajendra@example.com",
+                auth_provider="local",
                 timezone="Asia/Kolkata",
             )
             db.add(user)
