@@ -438,52 +438,6 @@ export default function EventTypesPage() {
 
         <aside style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <section className="section-card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'flex-start' }}>
-              <div>
-                <span className="status-chip success">Public profile</span>
-                <h2 style={{ marginTop: '1rem', fontFamily: 'Syne, DM Sans, sans-serif', fontSize: '1.35rem', fontWeight: 800, letterSpacing: '-0.04em' }}>
-                  One page to share
-                </h2>
-                <p className="helper-copy" style={{ marginTop: '0.45rem' }}>
-                  Keep the public page focused. People should only see the sessions that are ready to book.
-                </p>
-              </div>
-              <a href={publicProfileUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)' }}>
-                <ExternalLink size={18} />
-              </a>
-            </div>
-
-            <div style={{ marginTop: '1.15rem', padding: '1rem', borderRadius: '20px', background: 'var(--surface-muted)', border: '1px solid rgba(22, 37, 79, 0.08)' }}>
-              <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Public URL
-              </div>
-              <div style={{ marginTop: '0.45rem', fontSize: '0.95rem', fontWeight: 700, wordBreak: 'break-all' }}>{publicProfileUrl}</div>
-            </div>
-
-            <div style={{ marginTop: '1rem', display: 'flex', flexWrap: 'wrap', gap: '0.65rem' }}>
-              <button type="button" className="btn btn-outline" onClick={copyProfileLink} style={{ flex: 1, gap: '0.45rem' }}>
-                <Copy size={16} />
-                Copy public link
-              </button>
-              <a href={publicProfileUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline" style={{ flex: 1, gap: '0.45rem' }}>
-                <Eye size={16} />
-                Preview page
-              </a>
-            </div>
-
-            <div style={{ marginTop: '1rem' }}>
-              <div className="stat-line">
-                <span>Live event types</span>
-                <strong>{activeCount}</strong>
-              </div>
-              <div className="stat-line">
-                <span>Draft or hidden</span>
-                <strong>{eventTypes.length - activeCount}</strong>
-              </div>
-            </div>
-          </section>
-
-          <section className="section-card">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
               <div>
                 <span className="status-chip warning">{editingId ? 'Editing' : 'Builder'}</span>
@@ -672,6 +626,52 @@ export default function EventTypesPage() {
                 </button>
               </div>
             )}
+          </section>
+
+          <section className="section-card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'flex-start' }}>
+              <div>
+                <span className="status-chip success">Public profile</span>
+                <h2 style={{ marginTop: '1rem', fontFamily: 'Syne, DM Sans, sans-serif', fontSize: '1.35rem', fontWeight: 800, letterSpacing: '-0.04em' }}>
+                  One page to share
+                </h2>
+                <p className="helper-copy" style={{ marginTop: '0.45rem' }}>
+                  Keep the public page focused. People should only see the sessions that are ready to book.
+                </p>
+              </div>
+              <a href={publicProfileUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)' }}>
+                <ExternalLink size={18} />
+              </a>
+            </div>
+
+            <div style={{ marginTop: '1.15rem', padding: '1rem', borderRadius: '20px', background: 'var(--surface-muted)', border: '1px solid rgba(22, 37, 79, 0.08)' }}>
+              <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Public URL
+              </div>
+              <div style={{ marginTop: '0.45rem', fontSize: '0.95rem', fontWeight: 700, wordBreak: 'break-all' }}>{publicProfileUrl}</div>
+            </div>
+
+            <div style={{ marginTop: '1rem', display: 'flex', flexWrap: 'wrap', gap: '0.65rem' }}>
+              <button type="button" className="btn btn-outline" onClick={copyProfileLink} style={{ flex: 1, gap: '0.45rem' }}>
+                <Copy size={16} />
+                Copy public link
+              </button>
+              <a href={publicProfileUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline" style={{ flex: 1, gap: '0.45rem' }}>
+                <Eye size={16} />
+                Preview page
+              </a>
+            </div>
+
+            <div style={{ marginTop: '1rem' }}>
+              <div className="stat-line">
+                <span>Live event types</span>
+                <strong>{activeCount}</strong>
+              </div>
+              <div className="stat-line">
+                <span>Draft or hidden</span>
+                <strong>{eventTypes.length - activeCount}</strong>
+              </div>
+            </div>
           </section>
         </aside>
       </div>
