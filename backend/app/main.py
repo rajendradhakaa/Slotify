@@ -4,13 +4,15 @@ from .database import engine, Base, SessionLocal
 from .models import User, EventType, AvailabilityRule
 from .routers import event_types, availability, bookings, users
 from datetime import time
+import os
 
-app = FastAPI(title="Calendly Clone API", version="1.0.0")
+app = FastAPI(title="Slotify Clone API", version="1.0.0")
 
-# CORS - allow React dev server
+# CORS - Load from environment
+allowed_origins = os.getenv("FRONTEND_URL", "http://localhost:5173").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -71,4 +73,4 @@ def startup():
 
 @app.get("/")
 def root():
-    return {"message": "Calendly Clone API", "docs": "/docs"}
+    return {"message": "Slotify API", "docs": "/docs"}

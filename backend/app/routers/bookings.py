@@ -40,14 +40,14 @@ def send_confirmation_email(invitee_email: str, invitee_name: str, event_name: s
     http://localhost:5173/book/{event_name.replace(" ", "-").lower()}
 
     Best regards,
-    Calendly Clone
+    Slotify Team
     """
     msg_invitee.set_content(content_invitee)
 
     # 2. Host Email Notification
     msg_host = EmailMessage()
     msg_host['Subject'] = f"New Event Scheduled: {invitee_name} - {event_name}"
-    msg_host['From'] = f"Calendly Clone <{sender_email}>"
+    msg_host['From'] = f"Slotify <{sender_email}>"
     msg_host['To'] = sender_email  # Send back to host
 
     content_host = f"""
@@ -59,7 +59,7 @@ def send_confirmation_email(invitee_email: str, invitee_name: str, event_name: s
     Event: {event_name}
     When: {formatted_start} - {formatted_end} (UTC)
 
-    View your upcoming meetings on the Calendly Clone dashboard.
+    View your upcoming meetings on the Slotify dashboard.
     """
     msg_host.set_content(content_host)
 
@@ -71,6 +71,55 @@ def send_confirmation_email(invitee_email: str, invitee_name: str, event_name: s
         print(f"Confirmation emails sent to {invitee_email} and {sender_email}")
     except Exception as e:
         print(f"Failed to send emails: {e}")
+
+
+@router.post("/test-email")
+def test_email_config(test_email: str = "test@gmail.com"):
+    """
+    Test endpoint to verify email configuration works.
+    Send a test email to verify SMTP settings are correct.
+    """
+    sender_email = os.getenv("SMTP_USER")
+    sender_password = os.getenv("SMTP_PASSWORD")
+    
+    if not sender_email or not sender_password:
+        return {
+            "status": "error",
+            "message": "SMTP credentials not configured in .env file",
+            "required_vars": ["SMTP_USER", "SMTP_PASSWORD"]
+        }
+
+    msg = EmailMessage()
+    msg['Subject'] = "Slotify - Test Email"
+    msg['From'] = f"Slotify <{sender_email}>"
+    msg['To'] = test_email
+
+    msg.set_content("""
+Hi,
+
+This is a test email from Slotify to verify that email sending is working correctly.
+
+If you received this, your email configuration is set up properly!
+
+Best regards,
+Slotify Team
+    """)
+
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            server.login(sender_email, sender_password)
+            server.send_message(msg)
+        return {
+            "status": "success",
+            "message": f"Test email sent successfully to {test_email}",
+            "from": sender_email
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Failed to send test email: {str(e)}",
+            "error_type": type(e).__name__
+        }
 
 
 @router.post("", response_model=schemas.BookingResponse, status_code=201)
