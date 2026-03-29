@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Moon, Sun } from 'lucide-react';
 import Layout from './components/Layout/Layout';
+import HomePage from './pages/HomePage';
 import EventTypesPage from './pages/EventTypesPage';
 import AvailabilityPage from './pages/AvailabilityPage';
 import BookingPage from './pages/BookingPage';
@@ -50,7 +51,7 @@ function AppRoutes({ theme, onToggleTheme }) {
         <Route path="/confirmation/:bookingId" element={<ConfirmationPage />} />
         
         <Route path="/" element={<Layout theme={theme} onToggleTheme={onToggleTheme} />}>
-          <Route index element={<Navigate to="/event-types" replace />} />
+          <Route index element={<HomePage />} />
           <Route path="event-types" element={<EventTypesPage />} />
           <Route path="availability" element={<AvailabilityPage />} />
           <Route path="meetings" element={<MeetingsPage />} />

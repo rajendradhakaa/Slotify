@@ -5,6 +5,8 @@ const apiBaseUrl = !configuredApiBaseUrl || configuredApiBaseUrl === 'https://ap
   ? '/api'
   : configuredApiBaseUrl;
 
+export const API_BASE_URL = apiBaseUrl;
+
 const api = axios.create({
   baseURL: apiBaseUrl,
   headers: {

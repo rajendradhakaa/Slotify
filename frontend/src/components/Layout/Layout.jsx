@@ -14,6 +14,11 @@ const secondaryNavItems = [
 ];
 
 const pageMeta = {
+  '/': {
+    eyebrow: 'Home',
+    title: 'Welcome to Slotify',
+    description: 'Start from home, connect OAuth if needed, then complete your scheduling setup.',
+  },
   '/event-types': {
     eyebrow: 'Scheduling',
     title: 'Event types',
@@ -50,9 +55,9 @@ function getActiveStep(pathname) {
 function BrandLockup({ collapsed = false }) {
   return (
     <Link
-      to="/event-types"
+      to="/"
       style={{ display: 'flex', alignItems: 'center', gap: collapsed ? '0' : '0.95rem', justifyContent: collapsed ? 'center' : 'flex-start' }}
-      title="Go to Event Types"
+      title="Go to Home"
     >
       <div
         style={{

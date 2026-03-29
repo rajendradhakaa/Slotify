@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .database import engine, Base, SessionLocal
 from .models import User, EventType, AvailabilityRule
-from .routers import event_types, availability, bookings, users
+from .routers import event_types, availability, bookings, users, auth
 from datetime import time
 import os
 
@@ -24,6 +24,7 @@ app.include_router(availability.router)
 app.include_router(bookings.router)
 app.include_router(users.router)
 app.include_router(users.compat_router)
+app.include_router(auth.router)
 
 
 @app.on_event("startup")
