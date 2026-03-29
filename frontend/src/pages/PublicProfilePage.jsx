@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Clock, ChevronRight, Calendar } from 'lucide-react';
+import { Calendar, ChevronRight, Clock, Globe, Sparkles } from 'lucide-react';
 import { eventTypesApi } from '../api';
 import useMediaQuery from '../hooks/useMediaQuery';
 
@@ -14,7 +14,6 @@ export default function PublicProfilePage() {
     const fetchEventTypes = async () => {
       try {
         const data = await eventTypesApi.getAll();
-        // Filter to only show active event types if applicable
         setEventTypes(data);
       } catch (error) {
         console.error('Error fetching event types:', error);
@@ -26,109 +25,146 @@ export default function PublicProfilePage() {
     fetchEventTypes();
   }, []);
 
+  const publicEvents = eventTypes.filter((event) => event.is_active);
+
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: 'var(--bg-page)' }}>
-        <p style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Loading profile...</p>
+      <div style={{ minHeight: '100vh', padding: isCompact ? '1.2rem' : '2rem' }}>
+        <div className="skeleton" style={{ maxWidth: '960px', height: '240px', margin: '0 auto 1rem' }} />
+        <div style={{ maxWidth: '960px', margin: '0 auto', display: 'grid', gap: '1rem', gridTemplateColumns: isCompact ? '1fr' : 'repeat(3, minmax(0, 1fr))' }}>
+          {[1, 2, 3].map((item) => (
+            <div key={item} className="skeleton" style={{ height: '220px' }} />
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-page)', padding: isCompact ? '2.5rem 1rem' : '4rem 1rem' }}>
-      <div style={{ maxWidth: '840px', margin: '0 auto' }}>
-        {/* Profile Header */}
-        <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-          <div style={{ 
-            width: '80px', 
-            height: '80px', 
-            borderRadius: '50%', 
-            background: '#e9ecef', 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            fontSize: '2rem',
-            fontWeight: 700,
-            color: 'var(--text-primary)',
-            margin: '0 auto 1.5rem',
-            border: '4px solid white',
-            boxShadow: 'var(--shadow-sm)'
-          }}>R</div>
-          <h1 style={{ fontSize: isCompact ? '1.7rem' : '2rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>Rajendra Dhaka</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: isCompact ? '1rem' : '1.125rem', maxWidth: '600px', margin: '0 auto' }}>
-            Welcome to my scheduling page. Please select an event below to book a time with me.
+    <div style={{ minHeight: '100vh', padding: isCompact ? '1.2rem 1rem 2rem' : '2rem 1rem 3rem' }}>
+      <div style={{ maxWidth: '1040px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        <section className="page-hero">
+          <div className="eyebrow">
+            <Sparkles size={14} />
+            Rajendra Dhaka
+          </div>
+          <h1 className="hero-title" style={{ maxWidth: '740px' }}>Choose the session that matches what you need</h1>
+          <p className="hero-copy" style={{ maxWidth: '700px' }}>
+            Pick an event below to book time for strategy, reviews, or focused working sessions. Each option is built to keep the conversation crisp.
           </p>
-        </div>
+          <div className="action-row" style={{ marginTop: '1.25rem' }}>
+            <span className="status-chip" style={{ background: 'rgba(255, 255, 255, 0.16)', color: 'white' }}>
+              <Clock size={14} />
+              Asia/Kolkata host timezone
+            </span>
+            <span className="status-chip" style={{ background: 'rgba(255, 255, 255, 0.16)', color: 'white' }}>
+              <Globe size={14} />
+              {publicEvents.length} live event types
+            </span>
+          </div>
+        </section>
 
-        {/* Event Types Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: isCompact ? '1fr' : 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1.5rem' }}>
-          {eventTypes.map((event) => (
-            <div 
-              key={event.id}
-              onClick={() => navigate(`/book/${event.slug}`)}
-              className="card"
-              style={{ 
-                padding: '1.5rem', 
-                cursor: 'pointer', 
-                transition: 'all 0.2s',
-                position: 'relative',
-                overflow: 'hidden',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                minHeight: '180px'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.transform = 'translateY(-4px)';
-                e.currentTarget.style.boxShadow = 'var(--shadow-md)';
-                e.currentTarget.style.borderColor = 'var(--primary)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
-                e.currentTarget.style.borderColor = 'var(--border)';
-              }}
-            >
-              {/* Top Accent Color Bar */}
-              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', background: 'var(--primary)' }}></div>
-              
-              <div>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem', color: 'var(--text-primary)' }}>{event.name}</h3>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.9375rem', marginBottom: '0.5rem' }}>
-                  <Clock size={16} />
-                  <span>{event.duration} mins</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.9375rem' }}>
-                  <Calendar size={16} />
-                  <span>One-on-One</span>
-                </div>
-              </div>
+        <section className="section-card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div className="toolbar-row">
+            <div>
+              <h2 style={{ fontFamily: 'Manrope, Inter, sans-serif', fontSize: '1.45rem', fontWeight: 800, letterSpacing: '-0.04em' }}>
+                Available bookings
+              </h2>
+              <p className="helper-copy" style={{ marginTop: '0.3rem' }}>
+                Every live event below opens the booking calendar immediately.
+              </p>
+            </div>
+            <span className="status-chip success">{publicEvents.length} live options</span>
+          </div>
 
-              <div style={{ marginTop: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: 'var(--primary)', fontWeight: 600, fontSize: '0.9375rem' }}>
-                <span>View availability</span>
-                <ChevronRight size={18} />
-              </div>
+          <div style={{ display: 'grid', gridTemplateColumns: isCompact ? '1fr' : 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+            {publicEvents.map((event) => (
+              <button
+                key={event.id}
+                type="button"
+                onClick={() => navigate(`/book/${event.slug}`)}
+                className="section-card"
+                style={{
+                  padding: 0,
+                  overflow: 'hidden',
+                  textAlign: 'left',
+                  alignItems: 'stretch',
+                  background: 'rgba(255, 255, 255, 0.95)',
+                  transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-4px)';
+                  e.currentTarget.style.boxShadow = 'var(--shadow-md)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
+                }}
+              >
+                <div style={{ height: '7px', background: event.color || 'var(--primary)' }} />
+                <div style={{ padding: '1.35rem' }}>
+                  <div className="status-chip muted" style={{ background: `${event.color || '#1457FF'}14`, color: event.color || 'var(--primary)' }}>
+                    Live booking
+                  </div>
+                  <h3
+                    style={{
+                      marginTop: '1rem',
+                      fontFamily: 'Manrope, Inter, sans-serif',
+                      fontSize: '1.28rem',
+                      fontWeight: 800,
+                      letterSpacing: '-0.03em',
+                    }}
+                  >
+                    {event.name}
+                  </h3>
+
+                  <div style={{ display: 'grid', gap: '0.7rem', marginTop: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: 'var(--text-secondary)' }}>
+                      <Clock size={16} />
+                      {event.duration} minute session
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: 'var(--text-secondary)' }}>
+                      <Calendar size={16} />
+                      One-on-one booking flow
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      marginTop: '1.35rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      fontWeight: 700,
+                      color: event.color || 'var(--primary)',
+                    }}
+                  >
+                    <span>View availability</span>
+                    <ChevronRight size={18} />
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {publicEvents.length === 0 ? (
+            <div className="empty-state">
+              <h3 style={{ fontFamily: 'Manrope, Inter, sans-serif', fontSize: '1.3rem', fontWeight: 800, letterSpacing: '-0.03em' }}>
+                No public event types are live right now
+              </h3>
+              <p className="helper-copy" style={{ maxWidth: '480px', margin: '0.75rem auto 0' }}>
+                The dashboard still has booking links, but they are currently hidden from the public page until they are ready to be shared.
+              </p>
             </div>
-          ))}
-          
-          {eventTypes.length === 0 && (
-            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '4rem 2rem', background: 'white', borderRadius: '12px', border: '1px dashed var(--border)' }}>
-              <p style={{ color: 'var(--text-secondary)' }}>No public events available at the moment.</p>
-            </div>
-          )}
-        </div>
-        
-        {/* Footer Branding */}
-        <div style={{ textAlign: 'center', marginTop: '5rem', opacity: 0.6 }}>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-            Powered by <span style={{ fontWeight: 700, color: 'var(--primary)' }}>Slotify</span>
+          ) : null}
+        </section>
+
+        <div style={{ textAlign: 'center', marginTop: '1rem', opacity: 0.72 }}>
+          <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>
+            Powered by <span style={{ fontWeight: 800, color: 'var(--primary)' }}>Slotify</span>
           </p>
         </div>
       </div>
-      
-      <style>{`
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-      `}</style>
     </div>
   );
 }

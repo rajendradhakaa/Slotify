@@ -1,49 +1,87 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Clock, Globe, ChevronLeft, ChevronRight, CheckCircle, CalendarPlus } from 'lucide-react';
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, isSameDay, isSameMonth, addDays, isBefore, startOfDay } from 'date-fns';
-import { eventTypesApi, availabilityApi, bookingsApi, getApiErrorMessage } from '../api';
+import {
+  Calendar,
+  CalendarPlus,
+  CheckCircle,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Globe,
+  Sparkles,
+} from 'lucide-react';
+import {
+  addDays,
+  addMonths,
+  endOfMonth,
+  endOfWeek,
+  format,
+  isBefore,
+  isSameDay,
+  isSameMonth,
+  startOfDay,
+  startOfMonth,
+  startOfWeek,
+  subMonths,
+} from 'date-fns';
+import { availabilityApi, bookingsApi, eventTypesApi, getApiErrorMessage } from '../api';
 import useMediaQuery from '../hooks/useMediaQuery';
+
+function parseApiDate(value) {
+  if (!value) {
+    return new Date();
+  }
+
+  if (value instanceof Date) {
+    return value;
+  }
+
+  if (typeof value === 'number') {
+    return new Date(value);
+  }
+
+  const hasTimezone = /([+-]\d{2}:\d{2}|Z)$/.test(value);
+  return new Date(hasTimezone ? value : `${value}Z`);
+}
+
+function formatInTimezone(value, timeZone, options) {
+  return new Intl.DateTimeFormat('en-US', { timeZone, ...options }).format(parseApiDate(value));
+}
 
 export default function BookingPage() {
   const { slug } = useParams();
   const isCompact = useMediaQuery('(max-width: 960px)');
   const isNarrow = useMediaQuery('(max-width: 640px)');
+
   const [eventType, setEventType] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
-  // Selection state
   const [currentDate, setCurrentDate] = useState(new Date());
-  
-  // Native JS Formatters based on selected timezone
-  const fFullDate = (d) => new Intl.DateTimeFormat('en-US', { timeZone: userTimezone, weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }).format(new Date(d));
-  const fTime = (d) => new Intl.DateTimeFormat('en-US', { timeZone: userTimezone, hour: 'numeric', minute: 'numeric', hour12: true }).format(new Date(d));
-  const fShortDate = (d) => new Intl.DateTimeFormat('en-US', { timeZone: userTimezone, weekday: 'long', month: 'short', day: 'numeric' }).format(new Date(d));
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
-  
-  // Timezone state
-  const [userTimezone, setUserTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
-  const commonTimezones = [
-    Intl.DateTimeFormat().resolvedOptions().timeZone,
-    "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
-    "Europe/London", "Europe/Paris", "Asia/Kolkata", "Asia/Tokyo", "Australia/Sydney", "UTC"
-  ];
-  const uniqueTimezones = [...new Set(commonTimezones.filter(Boolean))];
-
-  // Slots state
   const [availableSlots, setAvailableSlots] = useState([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
-  
-  // Form state
   const [formData, setFormData] = useState({ name: '', email: '' });
-  const [bookingStatus, setBookingStatus] = useState('idle'); // idle, submitting, success, error
+  const [bookingStatus, setBookingStatus] = useState('idle');
   const [bookingResult, setBookingResult] = useState(null);
-  
-  // Real-time validation state
-  const [validatingTime, setValidatingTime] = useState(false);
-  const [timeError, setTimeError] = useState(null);
+  const [bookingError, setBookingError] = useState('');
+  const [userTimezone, setUserTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
+
+  const uniqueTimezones = useMemo(() => (
+    [
+      Intl.DateTimeFormat().resolvedOptions().timeZone,
+      'America/New_York',
+      'America/Chicago',
+      'America/Denver',
+      'America/Los_Angeles',
+      'Europe/London',
+      'Europe/Paris',
+      'Asia/Kolkata',
+      'Asia/Tokyo',
+      'Australia/Sydney',
+      'UTC',
+    ].filter(Boolean).filter((item, index, array) => array.indexOf(item) === index)
+  ), []);
 
   useEffect(() => {
     let ignore = false;
@@ -54,9 +92,9 @@ export default function BookingPage() {
         if (!ignore) {
           setEventType(data);
         }
-      } catch (error) {
+      } catch (requestError) {
         if (!ignore) {
-          setError('Event type not found or unavailable.');
+          setError('This booking link is unavailable right now.');
         }
       } finally {
         if (!ignore) {
@@ -70,7 +108,6 @@ export default function BookingPage() {
     const storedBooking = sessionStorage.getItem(`booking_${slug}`);
     if (storedBooking) {
       setBookingResult(JSON.parse(storedBooking));
-      setBookingStatus('success');
     }
 
     return () => {
@@ -81,6 +118,7 @@ export default function BookingPage() {
   useEffect(() => {
     if (!selectedDate || !eventType) {
       setAvailableSlots([]);
+      setSelectedTimeSlot(null);
       return;
     }
 
@@ -88,16 +126,19 @@ export default function BookingPage() {
 
     const loadSlots = async () => {
       setLoadingSlots(true);
-      setAvailableSlots([]);
       setSelectedTimeSlot(null);
+      setBookingError('');
       try {
         const dateStr = format(selectedDate, 'yyyy-MM-dd');
         const data = await availabilityApi.getSlots(slug, dateStr);
         if (!ignore) {
           setAvailableSlots(data.slots || []);
         }
-      } catch (error) {
-        console.error('Error fetching slots:', error);
+      } catch (requestError) {
+        if (!ignore) {
+          setAvailableSlots([]);
+          setBookingError('Could not load available slots for that day.');
+        }
       } finally {
         if (!ignore) {
           setLoadingSlots(false);
@@ -110,12 +151,41 @@ export default function BookingPage() {
     return () => {
       ignore = true;
     };
-  }, [selectedDate, eventType, slug]);
+  }, [eventType, selectedDate, slug]);
+
+  const formatFullDate = (value) => formatInTimezone(value, userTimezone, {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+
+  const formatShortDate = (value) => formatInTimezone(value, userTimezone, {
+    weekday: 'long',
+    month: 'short',
+    day: 'numeric',
+  });
+
+  const formatTime = (value) => formatInTimezone(value, userTimezone, {
+    hour: 'numeric',
+    minute: 'numeric',
+    hour12: true,
+  });
+
+  const handleSlotSelect = (slot) => {
+    setSelectedTimeSlot(slot);
+    setBookingError('');
+  };
 
   const handleBook = async (e) => {
     e.preventDefault();
+    if (!selectedTimeSlot || !eventType) {
+      return;
+    }
+
     setBookingStatus('submitting');
-    
+    setBookingError('');
+
     try {
       const response = await bookingsApi.create({
         event_type_id: eventType.id,
@@ -123,17 +193,15 @@ export default function BookingPage() {
         invitee_email: formData.email,
         start_time: selectedTimeSlot.datetime_utc,
       });
-      
+
       sessionStorage.setItem(`booking_${slug}`, JSON.stringify(response));
       setBookingResult(response);
       setBookingStatus('success');
-    } catch (error) {
-      setBookingStatus('error');
-      alert(getApiErrorMessage(error, 'This time slot is no longer available. Please select another time.'));
+    } catch (requestError) {
+      setBookingStatus('idle');
+      setBookingError(getApiErrorMessage(requestError, 'This time slot is no longer available. Please choose another time.'));
       setSelectedTimeSlot(null);
-      setSelectedDate((currentDateValue) =>
-        currentDateValue ? new Date(currentDateValue) : currentDateValue
-      );
+      setSelectedDate((currentValue) => (currentValue ? new Date(currentValue) : currentValue));
     }
   };
 
@@ -142,104 +210,149 @@ export default function BookingPage() {
     setSelectedDate(null);
     setSelectedTimeSlot(null);
     setFormData({ name: '', email: '' });
+    setBookingError('');
   };
 
   const makeGCalUrl = () => {
-    if (!bookingResult || !eventType) return '#';
-    const start = new Date(bookingResult.start_time);
-    const end = new Date(bookingResult.end_time);
-    const fmt = (d) => d.toISOString().replace(/-|:|\.\d\d\d/g, "");
+    if (!bookingResult || !eventType) {
+      return '#';
+    }
+
+    const start = parseApiDate(bookingResult.start_time);
+    const end = parseApiDate(bookingResult.end_time);
+    const formatGoogleDate = (date) => date.toISOString().replace(/-|:|\.\d\d\d/g, '');
     const text = encodeURIComponent(`Meeting with Rajendra Dhaka: ${eventType.name}`);
-    return `https://calendar.google.com/calendar/r/eventedit?text=${text}&dates=${fmt(start)}/${fmt(end)}`;
+    return `https://calendar.google.com/calendar/r/eventedit?text=${text}&dates=${formatGoogleDate(start)}/${formatGoogleDate(end)}`;
   };
 
-  // Calendar rendering logic
   const renderCalendar = () => {
     const monthStart = startOfMonth(currentDate);
     const monthEnd = endOfMonth(monthStart);
-    const startDate = startOfWeek(monthStart);
-    const endDate = endOfWeek(monthEnd);
+    const rangeStart = startOfWeek(monthStart);
+    const rangeEnd = endOfWeek(monthEnd);
     const today = startOfDay(new Date());
-
-    const dateFormat = "d";
     const rows = [];
-    let days = [];
-    let day = startDate;
-    let formattedDate = "";
+    let cells = [];
+    let day = rangeStart;
 
-    const dayHeaders = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
     rows.push(
-      <div className="calendar-grid-header" key="header">
-        {dayHeaders.map(day => (
-          <div className="calendar-day-header" key={day}>{day}</div>
+      <div className="calendar-grid-header" key="calendar-header">
+        {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map((header) => (
+          <div className="calendar-day-header" key={header}>
+            {header}
+          </div>
         ))}
       </div>
     );
 
-    while (day <= endDate) {
-      for (let i = 0; i < 7; i++) {
-        formattedDate = format(day, dateFormat);
+    while (day <= rangeEnd) {
+      for (let i = 0; i < 7; i += 1) {
         const cloneDay = day;
         const isPast = isBefore(day, today);
         const isCurrentMonth = isSameMonth(day, monthStart);
         const isSelected = selectedDate && isSameDay(day, selectedDate);
-        
         const isDisabled = isPast || !isCurrentMonth;
 
-        days.push(
+        cells.push(
           <div
+            key={day.toISOString()}
             className={`calendar-cell ${isDisabled ? 'disabled' : ''} ${isSelected ? 'selected' : ''}`}
-            key={day}
             onClick={() => {
-              if (!isDisabled) setSelectedDate(cloneDay);
+              if (!isDisabled) {
+                setSelectedDate(cloneDay);
+              }
             }}
           >
-            <span className="calendar-number">{formattedDate}</span>
+            <span className="calendar-number">{format(day, 'd')}</span>
           </div>
         );
+
         day = addDays(day, 1);
       }
+
       rows.push(
-        <div className="calendar-row" key={day}>
-          {days}
+        <div className="calendar-row" key={day.toISOString()}>
+          {cells}
         </div>
       );
-      days = [];
+      cells = [];
     }
-    return <div className="calendar-body">{rows}</div>;
+
+    return <div>{rows}</div>;
   };
 
-  if (loading) return <div style={{ display: 'flex', justifyContent: 'center', marginTop: '10rem' }}>Loading...</div>;
-  if (error || !eventType) return <div style={{ textAlign: 'center', marginTop: '5rem' }}><h2>{error || 'Not found'}</h2></div>;
+  if (loading) {
+    return (
+      <div style={{ padding: isCompact ? '1rem' : '2rem', minHeight: '100vh' }}>
+        <div className="skeleton" style={{ maxWidth: '1180px', height: '640px', margin: '0 auto' }} />
+      </div>
+    );
+  }
+
+  if (error || !eventType) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+        <div className="section-card empty-state" style={{ maxWidth: '540px' }}>
+          <h2 style={{ fontFamily: 'Manrope, Inter, sans-serif', fontSize: '1.45rem', fontWeight: 800, letterSpacing: '-0.03em' }}>
+            {error || 'Booking link not found'}
+          </h2>
+          <p className="helper-copy" style={{ marginTop: '0.75rem' }}>
+            This event may have been removed, hidden from the public page, or the URL was entered incorrectly.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (bookingStatus === 'success') {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: isCompact ? 'auto' : '100vh', background: 'var(--bg-page)', padding: isCompact ? '1rem' : 0 }}>
-        <div className="card" style={{ width: '100%', maxWidth: '600px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: isNarrow ? '2rem 1.25rem' : '3rem 2rem' }}>
-          <CheckCircle size={64} color="#1E8E3E" style={{ marginBottom: '1.5rem' }} />
-          <h1 style={{ fontSize: isNarrow ? '1.5rem' : '1.75rem', fontWeight: 600, marginBottom: '0.5rem' }}>You are scheduled</h1>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>A calendar invitation has been sent to your email address.</p>
-          
-          <div style={{ width: '100%', border: '1px solid var(--border)', borderRadius: '8px', padding: '1.5rem', textAlign: 'left' }}>
-            <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>{eventType.name}</h3>
-            
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem', color: 'var(--text-secondary)' }}>
-              <Clock size={16} />
-              <span>{fFullDate(bookingResult.start_time)}</span>
-            </div>
-            
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem', color: 'var(--text-secondary)' }}>
-              <Globe size={16} />
-              <span>{fTime(bookingResult.start_time)} - {fTime(bookingResult.end_time)} ({userTimezone})</span>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: isCompact ? '1rem' : '2rem' }}>
+        <div className="section-card" style={{ width: '100%', maxWidth: '680px', textAlign: 'center', padding: isNarrow ? '1.5rem' : '2.3rem' }}>
+          <CheckCircle size={70} color="var(--success)" style={{ margin: '0 auto 1.25rem' }} />
+          <h1 style={{ fontFamily: 'Manrope, Inter, sans-serif', fontSize: isNarrow ? '1.7rem' : '2rem', fontWeight: 800, letterSpacing: '-0.04em' }}>
+            You are booked
+          </h1>
+          <p className="helper-copy" style={{ marginTop: '0.7rem', maxWidth: '520px', marginInline: 'auto' }}>
+            Your booking is confirmed. If email is configured, a confirmation message is on the way too.
+          </p>
+
+          <div
+            style={{
+              marginTop: '1.5rem',
+              padding: '1.2rem',
+              borderRadius: '24px',
+              background: 'var(--surface-muted)',
+              border: '1px solid rgba(22, 37, 79, 0.08)',
+              textAlign: 'left',
+            }}
+          >
+            <div className="status-chip success">Confirmed</div>
+            <h2 style={{ marginTop: '0.9rem', fontFamily: 'Manrope, Inter, sans-serif', fontSize: '1.3rem', fontWeight: 800, letterSpacing: '-0.03em' }}>
+              {eventType.name}
+            </h2>
+            <div style={{ display: 'grid', gap: '0.75rem', marginTop: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', color: 'var(--text-secondary)' }}>
+                <Calendar size={16} />
+                {formatFullDate(bookingResult.start_time)}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', color: 'var(--text-secondary)' }}>
+                <Clock size={16} />
+                {formatTime(bookingResult.start_time)} - {formatTime(bookingResult.end_time)} ({userTimezone})
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', color: 'var(--text-secondary)' }}>
+                <Globe size={16} />
+                Booking for {formData.name || bookingResult.invitee_name}
+              </div>
             </div>
           </div>
-          
-          <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-            <a href={makeGCalUrl()} target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
-              <CalendarPlus size={18} /> Add to Google Calendar
+
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.8rem', justifyContent: 'center', marginTop: '1.5rem' }}>
+            <a href={makeGCalUrl()} target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ gap: '0.5rem' }}>
+              <CalendarPlus size={18} />
+              Add to Google Calendar
             </a>
             <button type="button" className="btn btn-outline" onClick={resetBooking}>
-              Schedule another event
+              Book another time
             </button>
           </div>
         </div>
@@ -248,235 +361,354 @@ export default function BookingPage() {
   }
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', padding: isCompact ? '1.25rem 0.75rem' : '4rem 1rem', minHeight: '100vh', background: 'var(--bg-page)' }}>
-      <div className="card booking-container" style={{ width: '100%', maxWidth: isCompact ? '100%' : (selectedDate && !selectedTimeSlot ? '1050px' : '800px'), display: 'flex', flexDirection: isCompact ? 'column' : 'row', overflow: 'hidden', padding: 0, minHeight: '400px', transition: 'max-width 0.3s' }}>
-        
-        {/* Left sidebar - Event Details */}
-        <div style={{ width: isCompact ? '100%' : '320px', borderRight: isCompact ? 'none' : '1px solid var(--border)', borderBottom: isCompact ? '1px solid var(--border)' : 'none', padding: isNarrow ? '1.25rem' : '2rem', flexShrink: 0 }}>
-          <h2 style={{ color: 'var(--text-secondary)', fontSize: '1rem', fontWeight: 600, marginBottom: '0.25rem' }}>Rajendra Dhaka</h2>
-          <h1 style={{ fontSize: isNarrow ? '1.5rem' : '1.75rem', fontWeight: 600, marginBottom: '1.5rem', color: 'var(--text-primary)' }}>{eventType.name}</h1>
-          
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--text-secondary)', marginBottom: '1rem', fontWeight: 500, flexWrap: 'wrap' }}>
-            <Clock size={18} />
-            {eventType.duration} min
+    <div style={{ minHeight: '100vh', padding: isCompact ? '1rem' : '2rem' }}>
+      <div
+        className="card"
+        style={{
+          maxWidth: '1180px',
+          margin: '0 auto',
+          overflow: 'hidden',
+          display: 'grid',
+          gridTemplateColumns: isCompact ? '1fr' : '320px minmax(0, 1fr)',
+        }}
+      >
+        <aside
+          style={{
+            padding: isNarrow ? '1.25rem' : '1.6rem',
+            borderRight: isCompact ? 'none' : '1px solid rgba(22, 37, 79, 0.08)',
+            borderBottom: isCompact ? '1px solid rgba(22, 37, 79, 0.08)' : 'none',
+            background:
+              'radial-gradient(circle at top left, rgba(20, 87, 255, 0.12), transparent 45%), linear-gradient(180deg, rgba(244, 247, 255, 0.96) 0%, rgba(255, 255, 255, 0.94) 100%)',
+          }}
+        >
+          <div
+            style={{
+              width: '52px',
+              height: '52px',
+              borderRadius: '18px',
+              background: 'linear-gradient(135deg, #4a82ff 0%, #1457ff 58%, #ff8a3d 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white',
+              fontFamily: 'Manrope, Inter, sans-serif',
+              fontWeight: 800,
+              fontSize: '1.2rem',
+              boxShadow: '0 16px 30px rgba(20, 87, 255, 0.2)',
+            }}
+          >
+            R
           </div>
 
-          {(selectedDate && selectedTimeSlot) && (
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', color: 'var(--text-secondary)', marginTop: '1.5rem', fontWeight: 500 }}>
-              <Globe size={18} style={{ marginTop: '2px' }} />
-              <div>
-                {fFullDate(selectedDate)}
-                <br />
-                {fTime(selectedTimeSlot.datetime_utc)}
+          <div className="status-chip" style={{ marginTop: '1rem' }}>
+            <Sparkles size={14} />
+            Live booking page
+          </div>
+          <div style={{ marginTop: '1.1rem', color: 'var(--text-secondary)', fontWeight: 700 }}>Rajendra Dhaka</div>
+          <h1 style={{ marginTop: '0.35rem', fontFamily: 'Manrope, Inter, sans-serif', fontSize: isNarrow ? '1.6rem' : '1.95rem', fontWeight: 800, letterSpacing: '-0.04em' }}>
+            {eventType.name}
+          </h1>
+          <p className="helper-copy" style={{ marginTop: '0.75rem' }}>
+            Choose a date, pick a real available slot, then confirm the booking with your details.
+          </p>
+
+          <div style={{ display: 'grid', gap: '0.8rem', marginTop: '1.4rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
+              <Clock size={17} />
+              {eventType.duration} minute session
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
+              <Globe size={17} />
+              Times shown in {userTimezone}
+            </div>
+          </div>
+
+          <div style={{ marginTop: '1.5rem', padding: '1rem', borderRadius: '22px', background: 'rgba(20, 87, 255, 0.06)', border: '1px solid rgba(20, 87, 255, 0.12)' }}>
+            <div style={{ fontWeight: 700 }}>Your progress</div>
+            <div className="stat-line">
+              <span>Date selected</span>
+              <strong>{selectedDate ? 'Done' : 'Choose one'}</strong>
+            </div>
+            <div className="stat-line">
+              <span>Time selected</span>
+              <strong>{selectedTimeSlot ? 'Done' : 'Choose one'}</strong>
+            </div>
+            <div className="stat-line">
+              <span>Details submitted</span>
+              <strong>{bookingResult ? 'Done' : 'Pending'}</strong>
+            </div>
+          </div>
+
+          {(selectedDate && selectedTimeSlot) ? (
+            <div style={{ marginTop: '1.5rem', padding: '1rem', borderRadius: '22px', background: 'white', border: '1px solid rgba(22, 37, 79, 0.08)' }}>
+              <div style={{ fontWeight: 700 }}>Selected slot</div>
+              <p className="helper-copy" style={{ marginTop: '0.45rem' }}>
+                {formatFullDate(selectedTimeSlot.datetime_utc)}
+              </p>
+              <div style={{ marginTop: '0.35rem', fontWeight: 700 }}>
+                {formatTime(selectedTimeSlot.datetime_utc)}
               </div>
             </div>
-          )}
+          ) : null}
 
-          <div style={{ marginTop: '2rem', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
-            <label style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>Time zone</label>
-            <select 
+          <div style={{ marginTop: '1.5rem' }}>
+            <label className="form-label">Time zone</label>
+            <select
               value={userTimezone}
               onChange={(e) => setUserTimezone(e.target.value)}
-              className="form-input"
-              style={{ padding: '0.5rem', fontSize: '0.875rem', background: 'var(--bg-page)' }}
+              className="form-select"
             >
-              {uniqueTimezones.map(tz => (
-                <option key={tz} value={tz}>{tz}</option>
+              {uniqueTimezones.map((timezone) => (
+                <option key={timezone} value={timezone}>
+                  {timezone}
+                </option>
               ))}
             </select>
           </div>
-        </div>
+        </aside>
 
-        {/* Right side - Dynamic Content */}
-        <div style={{ flex: 1, padding: isNarrow ? '1.25rem' : '2rem', display: 'flex', flexDirection: 'column' }}>
-          
-          {selectedTimeSlot ? (
-            /* Booking Form View */
-            <div style={{ flex: 1, animation: 'fadeIn 0.3s' }}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1.5rem' }}>Enter Details</h2>
-              <form onSubmit={handleBook}>
-                <div className="form-group">
-                  <label className="form-label">Name</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    required
-                  />
-                </div>
-                <div className="form-group" style={{ marginBottom: '2rem' }}>
-                  <label className="form-label">Email</label>
-                  <input
-                    type="email"
-                    className="form-input"
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    required
-                  />
-                </div>
-                
-                <div style={{ display: 'flex', gap: '1rem', flexDirection: isNarrow ? 'column' : 'row' }}>
-                  <button type="submit" className="btn btn-primary" disabled={bookingStatus === 'submitting'} style={{ padding: '0.75rem 1.5rem' }}>
-                    {bookingStatus === 'submitting' ? 'Scheduling...' : 'Schedule Event'}
-                  </button>
-                  <button type="button" className="btn btn-outline" onClick={() => setSelectedTimeSlot(null)}>
-                    Back
-                  </button>
-                </div>
-              </form>
+        <main style={{ padding: isNarrow ? '1.1rem' : '1.6rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {bookingResult ? (
+            <div className="toast-banner" style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <Sparkles size={16} />
+                Need your last receipt? Your previous booking is still stored in this browser tab.
+              </div>
+              <button type="button" className="btn btn-outline" onClick={() => setBookingStatus('success')} style={{ minHeight: '40px' }}>
+                View receipt
+              </button>
             </div>
-            
-          ) : (
-            /* Calendar & Time Slots View */
-            <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: '1rem' }}>
-              
-              {bookingResult && (
-                <div style={{ background: '#f8f9fa', padding: '1rem 1.5rem', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: isCompact ? 'flex-start' : 'center', border: '1px solid #e0e0e0', gap: '1rem', flexDirection: isCompact ? 'column' : 'row' }}>
-                  <div>
-                    <strong style={{ display: 'block', color: 'var(--text-primary)', marginBottom: '4px' }}>Wait, need to see your last booking?</strong>
-                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>You can still view the receipt for the meeting you just scheduled.</span>
+          ) : null}
+
+          <section className="section-card" style={{ padding: '1.2rem' }}>
+            <div className="toolbar-row" style={{ alignItems: 'center' }}>
+              <div>
+                <h2 style={{ fontFamily: 'Manrope, Inter, sans-serif', fontSize: '1.4rem', fontWeight: 800, letterSpacing: '-0.04em' }}>
+                  Choose a date
+                </h2>
+                <p className="helper-copy" style={{ marginTop: '0.3rem' }}>
+                  Start with a day, then pick from the real available slots for that date.
+                </p>
+              </div>
+              <div className="status-chip muted">{selectedDate ? formatShortDate(selectedDate) : 'Step 1'}</div>
+            </div>
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: isCompact ? '1fr' : 'minmax(0, 1.1fr) minmax(280px, 0.9fr)',
+                gap: '1rem',
+                marginTop: '1rem',
+              }}
+            >
+              <div style={{ padding: '1rem', borderRadius: '22px', background: 'var(--surface-muted)', border: '1px solid rgba(22, 37, 79, 0.08)' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1.25rem', marginBottom: '1rem' }}>
+                  <button type="button" className="btn btn-outline" onClick={() => setCurrentDate(subMonths(currentDate, 1))} style={{ minWidth: '46px', paddingInline: '0.8rem' }}>
+                    <ChevronLeft size={18} />
+                  </button>
+                  <div style={{ fontFamily: 'Manrope, Inter, sans-serif', fontSize: isNarrow ? '1.05rem' : '1.15rem', fontWeight: 800, letterSpacing: '-0.03em' }}>
+                    {format(currentDate, 'MMMM yyyy')}
                   </div>
-                  <button onClick={() => setBookingStatus('success')} className="btn btn-outline" style={{ padding: '0.5rem 1rem', whiteSpace: 'nowrap', width: isNarrow ? '100%' : 'auto' }}>
-                    View receipt
+                  <button type="button" className="btn btn-outline" onClick={() => setCurrentDate(addMonths(currentDate, 1))} style={{ minWidth: '46px', paddingInline: '0.8rem' }}>
+                    <ChevronRight size={18} />
                   </button>
                 </div>
-              )}
+                {renderCalendar()}
+              </div>
 
-              <div style={{ display: 'flex', gap: isCompact ? '1.5rem' : '2rem', flexDirection: isCompact ? 'column' : 'row' }}>
-                <div style={{ flex: 1 }}>
-                  <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1.5rem' }}>Select a Date & Time</h2>
-                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '1.5rem', gap: isNarrow ? '1rem' : '2rem' }}>
-                    <button onClick={() => setCurrentDate(subMonths(currentDate, 1))} style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', padding: '0.5rem', borderRadius: '50%' }}>
-                      <ChevronLeft size={20} />
-                    </button>
-                    <div style={{ fontWeight: 600, fontSize: isNarrow ? '1rem' : '1.1rem', textAlign: 'center' }}>
-                      {format(currentDate, "MMMM yyyy")}
-                    </div>
-                    <button onClick={() => setCurrentDate(addMonths(currentDate, 1))} style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', padding: '0.5rem', borderRadius: '50%' }}>
-                      <ChevronRight size={20} />
-                    </button>
-                  </div>
-                  {renderCalendar()}
+              <div style={{ padding: '1rem', borderRadius: '22px', background: 'var(--surface-muted)', border: '1px solid rgba(22, 37, 79, 0.08)', display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
+                <div>
+                  <div className="status-chip">{selectedDate ? 'Step 2' : 'Select a date first'}</div>
+                  <h3 style={{ marginTop: '0.9rem', fontFamily: 'Manrope, Inter, sans-serif', fontSize: '1.2rem', fontWeight: 800, letterSpacing: '-0.03em' }}>
+                    {selectedDate ? `Available on ${formatShortDate(selectedDate)}` : 'Choose a day to see times'}
+                  </h3>
+                  <p className="helper-copy" style={{ marginTop: '0.3rem' }}>
+                    {selectedDate
+                      ? `All times are shown in ${userTimezone}.`
+                      : 'Once a day is selected, bookable times appear here automatically.'}
+                  </p>
                 </div>
 
-                {selectedDate && (
-                  <div style={{ width: isCompact ? '100%' : '220px', borderLeft: isCompact ? 'none' : '1px solid var(--border)', borderTop: isCompact ? '1px solid var(--border)' : 'none', paddingLeft: isCompact ? 0 : '1.5rem', paddingTop: isCompact ? '1.25rem' : 0, display: 'flex', flexDirection: 'column' }}>
-                    <h3 style={{ marginBottom: '1rem', fontWeight: 500, color: 'var(--text-secondary)', textAlign: 'center' }}>
-                      {fShortDate(selectedDate)}
-                    </h3>
-                    
-                    <div style={{ flex: 1, paddingRight: '0.5rem', marginTop: '1rem' }}>
-                      <div style={{ animation: 'fadeIn 0.3s' }}>
-                        <form onSubmit={async (e) => {
-                          e.preventDefault();
-                          setTimeError(null);
-                          setValidatingTime(true);
-                          
-                          const hhmm = e.target.elements.customTime.value; // format: "HH:mm"
-                          const dateStr = format(selectedDate, 'yyyy-MM-dd');
-                          const combined = `${dateStr}T${hhmm}:00`;
-                          
-                          try {
-                            const result = await availabilityApi.checkSlot(slug, combined);
-                            if (result.available) {
-                              setSelectedTimeSlot({ datetime_utc: combined });
-                            } else {
-                              setTimeError(result.reason || "This time is not available.");
-                            }
-                          } catch (err) {
-                            setTimeError("Could not validate time. Please try again.");
-                          } finally {
-                            setValidatingTime(false);
-                          }
-                        }}>
-                          <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-                            Enter start time
-                          </label>
-                          <input 
-                            name="customTime"
-                            type="time" 
-                            required
-                            className="form-input" 
-                            style={{ width: '100%', padding: '0.75rem', fontSize: '1rem', marginBottom: '1rem' }}
-                            onChange={() => setTimeError(null)}
-                          />
-                          
-                          {timeError && (
-                            <p style={{ color: 'var(--danger)', fontSize: '0.875rem', marginBottom: '1rem' }}>
-                              {timeError}
-                            </p>
-                          )}
-
-                          <button 
-                            type="submit" 
-                            className="btn btn-primary" 
-                            style={{ width: '100%', padding: '0.75rem' }}
-                            disabled={validatingTime}
-                          >
-                            {validatingTime ? 'Checking...' : 'Continue'}
-                          </button>
-                          {loadingSlots && (
-                            <p style={{ marginTop: '1rem', fontSize: '0.8rem', color: 'var(--text-secondary)', textAlign: 'center' }}>
-                              Loading availability...
-                            </p>
-                          )}
-                          {!loadingSlots && availableSlots.length > 0 && (
-                            <p style={{ marginTop: '1rem', fontSize: '0.8rem', color: 'var(--text-secondary)', textAlign: 'center' }}>
-                              (Suggested first available: {fTime(availableSlots[0].datetime_utc)})
-                            </p>
-                          )}
-                        </form>
-                      </div>
-                    </div>
+                {!selectedDate ? (
+                  <div className="empty-state" style={{ padding: '2rem 1rem' }}>
+                    <Calendar size={30} color="var(--primary)" style={{ marginBottom: '0.8rem' }} />
+                    <p className="helper-copy">Select a date from the calendar to unlock time slots.</p>
+                  </div>
+                ) : loadingSlots ? (
+                  <div style={{ display: 'grid', gap: '0.75rem' }}>
+                    {[1, 2, 3, 4].map((item) => (
+                      <div key={item} className="skeleton" style={{ height: '54px' }} />
+                    ))}
+                  </div>
+                ) : availableSlots.length === 0 ? (
+                  <div className="empty-state" style={{ padding: '2rem 1rem' }}>
+                    <Clock size={30} color="var(--primary)" style={{ marginBottom: '0.8rem' }} />
+                    <p className="helper-copy">No open slots on that day. Try a different date to keep the booking moving.</p>
+                  </div>
+                ) : (
+                  <div style={{ display: 'grid', gap: '0.75rem' }}>
+                    {availableSlots.map((slot) => (
+                      <button
+                        key={slot.datetime_utc}
+                        type="button"
+                        className={`slot-button ${selectedTimeSlot?.datetime_utc === slot.datetime_utc ? 'selected' : ''}`}
+                        onClick={() => handleSlotSelect(slot)}
+                      >
+                        <span>{formatTime(slot.datetime_utc)}</span>
+                        <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                          {eventType.duration} min
+                        </span>
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>
             </div>
-          )}
-        </div>
+          </section>
+
+          {selectedTimeSlot ? (
+            <section className="section-card">
+              <div className="toolbar-row">
+                <div>
+                  <div className="status-chip success">Step 3</div>
+                  <h2 style={{ marginTop: '0.85rem', fontFamily: 'Manrope, Inter, sans-serif', fontSize: '1.4rem', fontWeight: 800, letterSpacing: '-0.04em' }}>
+                    Confirm your details
+                  </h2>
+                  <p className="helper-copy" style={{ marginTop: '0.3rem' }}>
+                    You are booking {formatShortDate(selectedTimeSlot.datetime_utc)} at {formatTime(selectedTimeSlot.datetime_utc)}.
+                  </p>
+                </div>
+                <button type="button" className="btn btn-outline" onClick={() => setSelectedTimeSlot(null)}>
+                  Change time
+                </button>
+              </div>
+
+              <div
+                style={{
+                  marginTop: '1rem',
+                  padding: '1rem',
+                  borderRadius: '22px',
+                  background: 'var(--surface-muted)',
+                  border: '1px solid rgba(22, 37, 79, 0.08)',
+                }}
+              >
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
+                  <div className="status-chip success">{eventType.name}</div>
+                  <div className="status-chip muted">{eventType.duration} minutes</div>
+                  <div className="status-chip muted">{formatTime(selectedTimeSlot.datetime_utc)}</div>
+                </div>
+              </div>
+
+              {bookingError ? (
+                <div className="toast-banner error" style={{ marginTop: '1rem' }}>
+                  <Sparkles size={16} />
+                  {bookingError}
+                </div>
+              ) : null}
+
+              <form onSubmit={handleBook} style={{ marginTop: '1rem' }}>
+                <div className="input-grid">
+                  <div className="form-group">
+                    <label className="form-label">Your name</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={formData.name}
+                      onChange={(e) => setFormData((current) => ({ ...current, name: e.target.value }))}
+                      placeholder="Enter your full name"
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Email address</label>
+                    <input
+                      type="email"
+                      className="form-input"
+                      value={formData.email}
+                      onChange={(e) => setFormData((current) => ({ ...current, email: e.target.value }))}
+                      placeholder="you@example.com"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginTop: '0.5rem' }}>
+                  <button type="submit" className="btn btn-primary" disabled={bookingStatus === 'submitting'}>
+                    {bookingStatus === 'submitting' ? 'Scheduling...' : 'Confirm booking'}
+                  </button>
+                  <button type="button" className="btn btn-outline" onClick={() => setSelectedTimeSlot(null)}>
+                    Pick another time
+                  </button>
+                </div>
+              </form>
+            </section>
+          ) : null}
+        </main>
       </div>
 
       <style>{`
-        .calendar-grid-header { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; margin-bottom: 0.5rem; }
-        .calendar-day-header { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); padding: 0.5rem 0; }
-        .calendar-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.25rem; margin-bottom: 0.25rem; }
-        .calendar-cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 1rem; color: var(--primary); border-radius: 50%; cursor: pointer; transition: background 0.2s; position: relative; }
-        .calendar-cell:hover:not(.disabled) { background: rgba(0, 96, 230, 0.1); }
-        .calendar-cell.disabled { color: #ccc; cursor: default; }
-        .calendar-cell.selected { background: var(--primary); color: white; }
-        .calendar-cell.selected::after { content: ''; position: absolute; bottom: 4px; width: 4px; height: 4px; background: white; border-radius: 50%; }
-        
-        .slot-btn { width: 100%; border: 1px solid rgba(0, 96, 230, 0.5); background: transparent; color: var(--primary); font-weight: 600; padding: 0.75rem; border-radius: 4px; text-align: center; font-size: 1rem; cursor: pointer; transition: all 0.2s; }
-        .slot-btn:hover { border-color: var(--primary); border-width: 2px; padding: calc(0.75rem - 1px); }
-        
-        .slots-container::-webkit-scrollbar { width: 6px; }
-        .slots-container::-webkit-scrollbar-track { background: transparent; }
-        .slots-container::-webkit-scrollbar-thumb { background: #dcdcdc; border-radius: 4px; }
-        
-        @keyframes shimmer { 0% { background-position: -200px 0; } 100% { background-position: 200px 0; } }
-        .skeleton { 
-          animation: shimmer 1.5s infinite linear; 
-          background: linear-gradient(to right, #f6f7f8 4%, #edeef1 25%, #f6f7f8 36%); 
-          background-size: 1000px 100%; 
-          border-radius: 4px; 
-          border: 1px solid rgba(0,0,0,0.05); 
+        .calendar-grid-header {
+          display: grid;
+          grid-template-columns: repeat(7, 1fr);
+          text-align: center;
+          margin-bottom: 0.55rem;
         }
-        .slot-skeleton { height: 48px; width: 100%; }
-        
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .calendar-day-header {
+          padding: 0.5rem 0;
+          font-size: 0.72rem;
+          font-weight: 700;
+          color: var(--text-secondary);
+          letter-spacing: 0.04em;
+        }
+
+        .calendar-row {
+          display: grid;
+          grid-template-columns: repeat(7, 1fr);
+          gap: 0.3rem;
+          margin-bottom: 0.3rem;
+        }
+
+        .calendar-cell {
+          aspect-ratio: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 18px;
+          background: white;
+          color: var(--text-primary);
+          font-weight: 700;
+          cursor: pointer;
+          border: 1px solid transparent;
+          transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+        }
+
+        .calendar-cell:hover:not(.disabled) {
+          transform: translateY(-1px);
+          border-color: rgba(20, 87, 255, 0.18);
+          box-shadow: 0 12px 24px rgba(20, 87, 255, 0.08);
+        }
+
+        .calendar-cell.disabled {
+          color: #b5bed1;
+          cursor: default;
+          background: rgba(255, 255, 255, 0.55);
+        }
+
+        .calendar-cell.selected {
+          background: linear-gradient(135deg, #1457ff 0%, #4a82ff 100%);
+          color: white;
+          box-shadow: 0 14px 26px rgba(20, 87, 255, 0.24);
+        }
 
         @media (max-width: 640px) {
           .calendar-day-header {
-            font-size: 0.65rem;
-          }
-
-          .calendar-row {
-            gap: 0.15rem;
+            font-size: 0.64rem;
           }
 
           .calendar-cell {
-            font-size: 0.9rem;
+            border-radius: 14px;
+            font-size: 0.92rem;
           }
         }
       `}</style>
