@@ -69,6 +69,7 @@ def send_confirmation_email(
     invitee_name: str,
     event_name: str,
     event_slug: str,
+    booking_id: int,
     start_time: datetime,
     end_time: datetime,
 ):
@@ -88,7 +89,9 @@ def send_confirmation_email(
 
     formatted_start = start_time.strftime("%A, %B %d, %Y at %I:%M %p")
     formatted_end = end_time.strftime("%I:%M %p")
-    booking_url = f"{get_public_base_url()}/book/{event_slug}"
+    base_url = get_public_base_url()
+    booking_url = f"{base_url}/book/{event_slug}"
+    confirmation_url = f"{base_url}/confirmation/{booking_id}"
 
     content_invitee = f"""Hello {invitee_name},
 
@@ -97,6 +100,7 @@ Your booking has been confirmed.
 Meeting Details
 - Event: {event_name}
 - Date and time: {formatted_start} - {formatted_end} (UTC)
+- Confirmation page: {confirmation_url}
 - Booking page: {booking_url}
 
 If you need to schedule another time, please use the booking page above.
@@ -119,6 +123,7 @@ A new booking has been scheduled.
 Invitee: {invitee_name} ({invitee_email})
 Event: {event_name}
 Date and time: {formatted_start} - {formatted_end} (UTC)
+Confirmation page: {confirmation_url}
 Booking page: {booking_url}
 
 Please review this meeting in your Slotify dashboard.
@@ -225,6 +230,7 @@ def create_booking(data: schemas.BookingCreate, db: Session = Depends(get_db)):
             invitee_name=booking.invitee_name,
             event_name=event_type.name,
             event_slug=event_type.slug,
+            booking_id=booking.id,
             start_time=booking.start_time,
             end_time=booking.end_time,
         )

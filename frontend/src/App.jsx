@@ -7,13 +7,14 @@ import AvailabilityPage from './pages/AvailabilityPage';
 import BookingPage from './pages/BookingPage';
 import MeetingsPage from './pages/MeetingsPage';
 import PublicProfilePage from './pages/PublicProfilePage';
+import ConfirmationPage from './pages/ConfirmationPage';
 import './App.css';
 
 const THEME_STORAGE_KEY = 'slotify-theme';
 
 function AppRoutes({ theme, onToggleTheme }) {
   const location = useLocation();
-  const isPublicRoute = location.pathname.startsWith('/book/') || location.pathname.startsWith('/u/');
+  const isPublicRoute = location.pathname.startsWith('/book/') || location.pathname.startsWith('/u/') || location.pathname.startsWith('/confirmation/');
   const ThemeIcon = theme === 'dark' ? Sun : Moon;
   const themeLabel = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
 
@@ -46,6 +47,7 @@ function AppRoutes({ theme, onToggleTheme }) {
       <Routes>
         <Route path="/book/:slug" element={<BookingPage />} />
         <Route path="/u/:username" element={<PublicProfilePage />} />
+        <Route path="/confirmation/:bookingId" element={<ConfirmationPage />} />
         
         <Route path="/" element={<Layout theme={theme} onToggleTheme={onToggleTheme} />}>
           <Route index element={<Navigate to="/event-types" replace />} />

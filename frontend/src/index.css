@@ -370,10 +370,9 @@ img {
 
 .sidebar-edge-toggle {
   position: absolute;
-  top: 1.05rem;
-  right: 0.8rem;
-  width: 36px;
-  height: 36px;
+  right: -12px;
+  width: 34px;
+  height: 34px;
   border-radius: 11px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   background:
@@ -386,7 +385,7 @@ img {
 }
 
 .sidebar-edge-toggle:hover {
-  transform: translateY(-1px) scale(1.04);
+  transform: translateY(-1px) scale(1.03);
   border-color: rgba(255, 255, 255, 0.4);
   box-shadow: 0 14px 24px rgba(0, 0, 0, 0.34);
 }

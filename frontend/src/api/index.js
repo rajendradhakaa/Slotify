@@ -49,6 +49,7 @@ export const bookingsApi = {
     const params = upcoming !== undefined ? `?upcoming=${upcoming}` : '';
     return api.get(`/bookings${params}`).then(res => res.data);
   },
+  getById: (id) => api.get(`/bookings/${id}`).then(res => res.data),
   create: (data) => api.post('/bookings', data).then(res => res.data),
   cancel: (id) => api.patch(`/bookings/${id}/cancel`).then(res => res.data),
 };

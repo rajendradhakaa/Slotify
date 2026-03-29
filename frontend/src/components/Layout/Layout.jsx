@@ -269,6 +269,7 @@ export default function Layout({ theme = 'light', onToggleTheme }) {
         <button
           className="sidebar-edge-toggle"
           onClick={() => setIsSidebarCollapsed((value) => !value)}
+          style={{ top: isSidebarCollapsed ? '1rem' : '3.9rem' }}
           aria-label={sidebarToggleLabel}
           title={sidebarToggleLabel}
         >
