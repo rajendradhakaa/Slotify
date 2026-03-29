@@ -238,6 +238,15 @@ export default function Layout({ theme = 'light', onToggleTheme }) {
           overflow: 'hidden',
         }}
       >
+        <button
+          className="sidebar-edge-toggle"
+          onClick={() => setIsSidebarCollapsed((value) => !value)}
+          aria-label={sidebarToggleLabel}
+          title={sidebarToggleLabel}
+        >
+          <SidebarToggleIcon size={16} />
+        </button>
+
         <BrandLockup collapsed={isSidebarCollapsed} />
 
         {!isSidebarCollapsed ? (
@@ -394,15 +403,6 @@ export default function Layout({ theme = 'light', onToggleTheme }) {
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexShrink: 0 }}>
-              <button
-                className="btn btn-outline"
-                onClick={() => setIsSidebarCollapsed((value) => !value)}
-                style={{ width: '44px', minHeight: '44px', padding: 0 }}
-                aria-label={sidebarToggleLabel}
-                title={sidebarToggleLabel}
-              >
-                <SidebarToggleIcon size={18} />
-              </button>
               <button
                 className="btn btn-outline"
                 onClick={onToggleTheme}
