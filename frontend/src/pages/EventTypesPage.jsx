@@ -91,6 +91,9 @@ export default function EventTypesPage() {
   const publicProfileUrl = typeof window !== 'undefined'
     ? `${window.location.origin}/u/rajendradhaka`
     : '/u/rajendradhaka';
+  const publicBookingBase = typeof window !== 'undefined'
+    ? `${window.location.origin}/book`
+    : '/book';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -198,8 +201,12 @@ export default function EventTypesPage() {
     .sort((left, right) => Number(right.is_active) - Number(left.is_active) || left.name.localeCompare(right.name));
 
   const activeCount = eventTypes.filter((event) => event.is_active).length;
-  const totalDuration = eventTypes.reduce((sum, event) => sum + event.duration, 0);
-  const averageDuration = eventTypes.length ? Math.round(totalDuration / eventTypes.length) : 0;
+  const hasAtLeastOneEvent = eventTypes.length > 0;
+  const onboardingItems = [
+    { label: 'Event created', done: hasAtLeastOneEvent },
+    { label: 'Availability set', done: null, hint: 'Go to Availability step next' },
+    { label: 'Booking page live', done: activeCount > 0 },
+  ];
 
   const renderEventList = () => {
     if (loading) {
@@ -214,29 +221,54 @@ export default function EventTypesPage() {
 
     if (filteredEvents.length === 0) {
       return (
-        <div className="section-card empty-state">
-          <div
-            style={{
-              width: '60px',
-              height: '60px',
-              borderRadius: '20px',
-              margin: '0 auto 1rem',
-              background: 'var(--surface-tint)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <LinkIcon size={28} color="var(--primary)" />
+        <div className="section-card" style={{ display: 'grid', gap: '1rem' }}>
+          <div>
+            <h3 style={{ fontFamily: 'Syne, DM Sans, sans-serif', fontSize: '1.35rem', fontWeight: 800, letterSpacing: '-0.03em' }}>
+              {searchValue ? 'Nothing matches that search yet' : 'Create your first event'}
+            </h3>
+            <p className="helper-copy" style={{ marginTop: '0.45rem' }}>
+              {searchValue
+                ? 'Try a different keyword or clear your search filter.'
+                : 'Start with one session type. You can add more once you start getting bookings.'}
+            </p>
           </div>
-          <h3 style={{ fontFamily: 'Syne, DM Sans, sans-serif', fontSize: '1.35rem', fontWeight: 800, letterSpacing: '-0.03em' }}>
-            {searchValue ? 'Nothing matches that search yet' : 'Create your first event type'}
-          </h3>
-          <p className="helper-copy" style={{ maxWidth: '460px', margin: '0.75rem auto 0' }}>
-            {searchValue
-              ? 'Try a different keyword or clear the filter to see all booking options.'
-              : 'Start with one clear session type, then expand only if people actually need more.'}
-          </p>
+
+          <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap' }}>
+            <button type="button" className="btn btn-primary" onClick={() => openCreateForm()}>
+              <Plus size={16} />
+              Create Event Type
+            </button>
+            <button type="button" className="btn btn-outline" onClick={() => openCreateForm(EVENT_TEMPLATES[0])}>
+              Use Template
+            </button>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: isCompact ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: '0.75rem' }}>
+            {EVENT_TEMPLATES.map((template) => (
+              <button
+                key={template.name}
+                type="button"
+                className="section-card"
+                onClick={() => openCreateForm(template)}
+                style={{
+                  padding: '0.9rem',
+                  textAlign: 'left',
+                  borderRadius: '14px',
+                  background: 'var(--bg-content)',
+                }}
+              >
+                <div style={{ fontWeight: 800 }}>{template.name}</div>
+                <div className="helper-copy" style={{ marginTop: '0.2rem' }}>{template.duration} min</div>
+              </button>
+            ))}
+          </div>
+
+          <div style={{ padding: '0.9rem', borderRadius: '14px', background: 'var(--surface-muted)', border: '1px solid var(--border)' }}>
+            <div style={{ fontWeight: 700 }}>Booking page preview</div>
+            <p className="helper-copy" style={{ marginTop: '0.35rem' }}>
+              /u/rajendradhaka {'->'} visitors choose an event type, then date, then time.
+            </p>
+          </div>
         </div>
       );
     }
@@ -293,7 +325,7 @@ export default function EventTypesPage() {
                   </span>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem' }}>
                     <LinkIcon size={15} />
-                    slotify-iota.vercel.app/book/{event.slug}
+                    {publicBookingBase}/{event.slug}
                   </span>
                 </div>
               </div>
@@ -363,45 +395,38 @@ export default function EventTypesPage() {
         </div>
       ) : null}
 
-      <section className="page-hero">
-        <div className="eyebrow">
-          <LinkIcon size={14} />
-          Scheduling links
+      <section className="section-card" style={{ display: 'grid', gap: '1rem' }}>
+        <div className="toolbar-row">
+          <div>
+            <h1 style={{ fontFamily: 'Syne, DM Sans, sans-serif', fontSize: isCompact ? '1.55rem' : '1.85rem', fontWeight: 800, letterSpacing: '-0.04em' }}>
+              Create your first event
+            </h1>
+            <p className="helper-copy" style={{ marginTop: '0.45rem' }}>
+              Start with one session type. You can expand later.
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap' }}>
+            <button type="button" className="btn btn-primary" onClick={() => openCreateForm()}>
+              <Plus size={18} />
+              Create Event Type
+            </button>
+            <button type="button" className="btn btn-outline" onClick={() => openCreateForm(EVENT_TEMPLATES[1])}>
+              Use Template
+            </button>
+          </div>
         </div>
-        <h1 className="hero-title">Build a booking menu that feels deliberate</h1>
-        <p className="hero-copy">
-          A good scheduling page stays small and clear. Name each session well, then make it easy to share.
-        </p>
-        <div className="action-row">
-          <button type="button" className="btn btn-light" onClick={() => openCreateForm()}>
-            <Plus size={18} />
-            Create event type
-          </button>
-          <a href={publicProfileUrl} target="_blank" rel="noopener noreferrer" className="btn btn-light">
-            <ExternalLink size={18} />
-            View public page
-          </a>
+
+        <div style={{ display: 'grid', gap: '0.6rem' }}>
+          {onboardingItems.map((item) => (
+            <div key={item.label} className="stat-line">
+              <span>
+                {item.done ? '✓' : '[ ]'} {item.label}
+              </span>
+              <strong>{item.done ? 'Done' : (item.hint || 'Pending')}</strong>
+            </div>
+          ))}
         </div>
       </section>
-
-      <div className="metrics-grid">
-        <div className="section-card metric-card">
-          <span className="metric-label">Total event types</span>
-          <div className="metric-value">{eventTypes.length}</div>
-        </div>
-        <div className="section-card metric-card">
-          <span className="metric-label">Live for booking</span>
-          <div className="metric-value">{activeCount}</div>
-        </div>
-        <div className="section-card metric-card">
-          <span className="metric-label">Average duration</span>
-          <div className="metric-value">{averageDuration || 0} min</div>
-        </div>
-        <div className="section-card metric-card">
-          <span className="metric-label">Public profile</span>
-          <div className="metric-value">{activeCount > 0 ? 'Ready' : 'Draft'}</div>
-        </div>
-      </div>
 
       <div className="dashboard-grid dashboard-grid--sidebar">
         <section className="section-card" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -417,7 +442,7 @@ export default function EventTypesPage() {
 
             <button type="button" className="btn btn-primary" onClick={() => openCreateForm()} style={{ gap: '0.5rem' }}>
               <Plus size={18} />
-              New event
+              Create Event Type
             </button>
           </div>
 
@@ -442,7 +467,7 @@ export default function EventTypesPage() {
               <div>
                 <span className="status-chip warning">{editingId ? 'Editing' : 'Builder'}</span>
                 <h2 style={{ marginTop: '0.9rem', fontFamily: 'Syne, DM Sans, sans-serif', fontSize: '1.3rem', fontWeight: 800, letterSpacing: '-0.04em' }}>
-                  {showForm ? (editingId ? 'Edit event type' : 'Create event type') : 'Start from a useful shape'}
+                  {showForm ? (editingId ? 'Edit Event Type' : 'Create Event Type') : 'Start from a useful shape'}
                 </h2>
               </div>
               {showForm ? (
@@ -582,13 +607,13 @@ export default function EventTypesPage() {
                     {formData.name || 'Your event type name'}
                   </div>
                   <p className="helper-copy" style={{ marginTop: '0.35rem' }}>
-                    {formData.duration} minutes · slotify-iota.vercel.app/book/{formData.slug || 'your-event'}
+                    {formData.duration} minutes · {publicBookingBase}/{formData.slug || 'your-event'}
                   </p>
                 </div>
 
                 <div style={{ display: 'flex', gap: '0.75rem', flexDirection: isCompact ? 'column' : 'row' }}>
                   <button type="submit" className="btn btn-primary" disabled={submitting} style={{ flex: 1 }}>
-                    {submitting ? 'Saving...' : editingId ? 'Save changes' : 'Create event type'}
+                    {submitting ? 'Saving...' : editingId ? 'Save changes' : 'Create Event Type'}
                   </button>
                   <button type="button" className="btn btn-outline" onClick={resetForm} style={{ flex: 1 }}>
                     Cancel

@@ -65,7 +65,8 @@ export default function BookingPage() {
   const [availableSlots, setAvailableSlots] = useState([]);
   const [visibleSlotCount, setVisibleSlotCount] = useState(SLOTS_BATCH_SIZE);
   const [loadingSlots, setLoadingSlots] = useState(false);
-  const [formData, setFormData] = useState({ name: '', email: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', notes: '' });
+  const [touched, setTouched] = useState({ name: false, email: false });
   const [bookingStatus, setBookingStatus] = useState('idle');
   const [bookingResult, setBookingResult] = useState(null);
   const [bookingError, setBookingError] = useState('');
@@ -212,6 +213,30 @@ export default function BookingPage() {
 
   const visibleSlots = availableSlots.slice(0, visibleSlotCount);
   const hasMoreSlots = availableSlots.length > visibleSlotCount;
+  const groupedVisibleSlots = useMemo(() => {
+    const groups = { Morning: [], Afternoon: [], Evening: [] };
+
+    visibleSlots.forEach((slot) => {
+      const hour = slot.time
+        ? Number.parseInt(slot.time.split(':')[0], 10)
+        : parseApiDate(slot.datetime || slot.datetime_utc).getHours();
+
+      if (hour < 12) {
+        groups.Morning.push(slot);
+      } else if (hour < 17) {
+        groups.Afternoon.push(slot);
+      } else {
+        groups.Evening.push(slot);
+      }
+    });
+
+    return groups;
+  }, [visibleSlots]);
+  const validName = formData.name.trim().length >= 2;
+  const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim());
+  const isFormValid = validName && validEmail;
+  const nameError = touched.name && !validName ? 'Please enter your full name.' : '';
+  const emailError = touched.email && !validEmail ? 'Please enter a valid email address.' : '';
 
   const handleSlotSelect = (slot) => {
     setSelectedTimeSlot(slot);
@@ -253,6 +278,11 @@ export default function BookingPage() {
       return;
     }
 
+    if (!isFormValid) {
+      setTouched({ name: true, email: true });
+      return;
+    }
+
     setBookingStatus('submitting');
     setBookingError('');
 
@@ -279,7 +309,8 @@ export default function BookingPage() {
     setBookingStatus('idle');
     setSelectedDate(null);
     setSelectedTimeSlot(null);
-    setFormData({ name: '', email: '' });
+    setFormData({ name: '', email: '', notes: '' });
+    setTouched({ name: false, email: false });
     setBookingError('');
   };
 
@@ -556,7 +587,7 @@ export default function BookingPage() {
               <div className="toolbar-row" style={{ alignItems: 'center' }}>
                 <div>
                   <h2 style={{ fontFamily: 'Syne, DM Sans, sans-serif', fontSize: '1.4rem', fontWeight: 800, letterSpacing: '-0.04em' }}>
-                  Pick a day
+                    Step 1 - Select Date
                   </h2>
                   <p className="helper-copy" style={{ marginTop: '0.3rem' }}>
                   The times on the right update from live availability for the date you choose.
@@ -573,7 +604,7 @@ export default function BookingPage() {
                 marginTop: '1rem',
               }}
             >
-              <div style={{ padding: '1rem', borderRadius: '22px', background: 'var(--surface-muted)', border: '1px solid rgba(22, 37, 79, 0.08)' }}>
+              <div style={{ padding: '1rem', borderRadius: '22px', background: 'var(--surface-muted)', border: '1px solid var(--border)' }}>
                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1.25rem', marginBottom: '1rem' }}>
                   <button type="button" className="btn btn-outline" onClick={() => setCurrentDate(subMonths(currentDate, 1))} style={{ minWidth: '46px', paddingInline: '0.8rem' }}>
                     <ChevronLeft size={18} />
@@ -588,9 +619,9 @@ export default function BookingPage() {
                 {renderCalendar()}
               </div>
 
-              <div style={{ padding: '1rem', borderRadius: '22px', background: 'var(--surface-muted)', border: '1px solid rgba(22, 37, 79, 0.08)', display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
+              <div style={{ padding: '1rem', borderRadius: '22px', background: 'var(--surface-muted)', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
                 <div>
-                  <div className="status-chip">{selectedDate ? 'Step 2' : 'Select a date first'}</div>
+                  <div className="status-chip">{selectedDate ? 'Step 2 - Select Time' : 'Select a date first'}</div>
                   <h3 style={{ marginTop: '0.9rem', fontFamily: 'Syne, DM Sans, sans-serif', fontSize: '1.2rem', fontWeight: 800, letterSpacing: '-0.03em' }}>
                     {selectedDate ? `Available on ${formatShortDate(selectedDate)}` : 'Choose a day to see times'}
                   </h3>
@@ -655,18 +686,27 @@ export default function BookingPage() {
                         <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>
                           Showing {visibleSlots.length} of {availableSlots.length} slots
                         </div>
-                        {visibleSlots.map((slot) => (
-                          <button
-                            key={slot.datetime || slot.datetime_utc}
-                            type="button"
-                            className={`slot-button ${selectedTimeSlot?.datetime === slot.datetime && selectedTimeSlot?.time === slot.time ? 'selected' : ''}`}
-                            onClick={() => handleSlotSelect(slot)}
-                          >
-                            <span>{formatSlotTime(slot)}</span>
-                            <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
-                              {eventType.duration} min
-                            </span>
-                          </button>
+                        {Object.entries(groupedVisibleSlots).map(([label, slots]) => (
+                          slots.length > 0 ? (
+                            <div key={label} style={{ display: 'grid', gap: '0.55rem' }}>
+                              <div style={{ fontSize: '0.76rem', fontWeight: 700, color: 'var(--text-secondary)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                                {label}
+                              </div>
+                              {slots.map((slot) => (
+                                <button
+                                  key={slot.datetime || slot.datetime_utc}
+                                  type="button"
+                                  className={`slot-button ${selectedTimeSlot?.datetime === slot.datetime && selectedTimeSlot?.time === slot.time ? 'selected' : ''}`}
+                                  onClick={() => handleSlotSelect(slot)}
+                                >
+                                  <span>{formatSlotTime(slot)}</span>
+                                  <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                                    {eventType.duration} min
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
+                          ) : null
                         ))}
 
                         {hasMoreSlots ? (
@@ -702,7 +742,7 @@ export default function BookingPage() {
                 <div>
                   <div className="status-chip success">Step 3</div>
                   <h2 style={{ marginTop: '0.85rem', fontFamily: 'Syne, DM Sans, sans-serif', fontSize: '1.4rem', fontWeight: 800, letterSpacing: '-0.04em' }}>
-                    Confirm your details
+                    Step 3 - Enter Details
                   </h2>
                   <p className="helper-copy" style={{ marginTop: '0.3rem' }}>
                     You are booking {formatShortDate(selectedTimeSlot.datetime)} at {formatSlotTime(selectedTimeSlot)}.
@@ -744,10 +784,18 @@ export default function BookingPage() {
                       type="text"
                       className="form-input"
                       value={formData.name}
-                      onChange={(e) => setFormData((current) => ({ ...current, name: e.target.value }))}
+                      onBlur={() => setTouched((current) => ({ ...current, name: true }))}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setFormData((current) => ({ ...current, name: value }));
+                        if (touched.name) {
+                          setTouched((current) => ({ ...current, name: true }));
+                        }
+                      }}
                       placeholder="Enter your full name"
                       required
                     />
+                    {nameError ? <p className="field-hint" style={{ color: 'var(--danger)' }}>{nameError}</p> : null}
                   </div>
                   <div className="form-group">
                     <label className="form-label">Email address</label>
@@ -755,15 +803,36 @@ export default function BookingPage() {
                       type="email"
                       className="form-input"
                       value={formData.email}
-                      onChange={(e) => setFormData((current) => ({ ...current, email: e.target.value }))}
+                      onBlur={() => setTouched((current) => ({ ...current, email: true }))}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setFormData((current) => ({ ...current, email: value }));
+                        if (touched.email) {
+                          setTouched((current) => ({ ...current, email: true }));
+                        }
+                      }}
                       placeholder="you@example.com"
                       required
                     />
+                    {emailError ? <p className="field-hint" style={{ color: 'var(--danger)' }}>{emailError}</p> : null}
                   </div>
                 </div>
 
+                <div className="form-group">
+                  <label className="form-label">Notes (optional)</label>
+                  <textarea
+                    className="form-textarea"
+                    value={formData.notes}
+                    onChange={(e) => setFormData((current) => ({ ...current, notes: e.target.value }))}
+                    placeholder="Add context for the meeting"
+                    rows={3}
+                  />
+                </div>
+
+                <p className="helper-copy" style={{ marginTop: '-0.2rem' }}>You will receive a confirmation email after booking.</p>
+
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginTop: '0.5rem' }}>
-                  <button type="submit" className="btn btn-primary" disabled={bookingStatus === 'submitting'}>
+                  <button type="submit" className="btn btn-primary" disabled={bookingStatus === 'submitting' || !isFormValid}>
                     {bookingStatus === 'submitting' ? 'Scheduling...' : 'Confirm booking'}
                   </button>
                   <button type="button" className="btn btn-outline" onClick={() => setSelectedTimeSlot(null)}>

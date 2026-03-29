@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Clock, Copy, Wand2 } from 'lucide-react';
 import { availabilityApi, getApiErrorMessage } from '../api';
 import useMediaQuery from '../hooks/useMediaQuery';
@@ -16,12 +16,6 @@ function snapshotRules(rules) {
       }))
       .sort((left, right) => left.day_of_week - right.day_of_week)
   );
-}
-
-function getHoursForRange(startTime, endTime) {
-  const [startHours, startMinutes] = startTime.split(':').map(Number);
-  const [endHours, endMinutes] = endTime.split(':').map(Number);
-  return ((endHours * 60 + endMinutes) - (startHours * 60 + startMinutes)) / 60;
 }
 
 export default function AvailabilityPage() {
@@ -153,12 +147,6 @@ export default function AvailabilityPage() {
   };
 
   const hasChanges = !loading && snapshotRules(rules) !== savedSnapshot;
-  const activeRules = useMemo(() => rules.filter((rule) => rule.is_active), [rules]);
-  const activeDays = activeRules.length;
-  const totalWeeklyHours = activeRules.reduce((sum, rule) => sum + getHoursForRange(rule.start_time, rule.end_time), 0);
-  const earliestStart = activeRules.length
-    ? activeRules.map((rule) => rule.start_time).sort()[0]
-    : 'Unavailable';
 
   if (loading) {
     return (
@@ -183,40 +171,27 @@ export default function AvailabilityPage() {
         </div>
       ) : null}
 
-      <section className="page-hero">
-        <div className="eyebrow">
-          <Clock size={14} />
-          Weekly hours
-        </div>
-        <h1 className="hero-title">Set hours that feel real on the calendar</h1>
-        <p className="hero-copy">
-          This is the part people notice when they open your booking page. Keep it simple and honest.
-        </p>
-        <div className="action-row">
-          <button type="button" className="btn btn-light" onClick={handleSave} disabled={saving || !hasChanges}>
-            {saving ? 'Saving...' : 'Save changes'}
-          </button>
-          <button type="button" className="btn btn-light" onClick={copyMondayToWeekdays}>
-            <Copy size={16} />
-            Copy Monday to weekdays
-          </button>
+      <section className="section-card" style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+        <div className="toolbar-row">
+          <div>
+            <h1 style={{ fontFamily: 'Syne, DM Sans, sans-serif', fontSize: isCompact ? '1.55rem' : '1.8rem', fontWeight: 800, letterSpacing: '-0.04em' }}>
+              Step 2 - Set Availability
+            </h1>
+            <p className="helper-copy" style={{ marginTop: '0.4rem' }}>
+              Keep one clear baseline so people can book quickly.
+            </p>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.65rem' }}>
+            <button type="button" className="btn btn-outline" onClick={copyMondayToWeekdays}>
+              <Copy size={16} />
+              Copy Monday to weekdays
+            </button>
+            <button type="button" className="btn btn-primary" onClick={handleSave} disabled={saving || !hasChanges}>
+              {saving ? 'Saving...' : 'Save changes'}
+            </button>
+          </div>
         </div>
       </section>
-
-      <div className="metrics-grid">
-        <div className="section-card metric-card">
-          <span className="metric-label">Active days</span>
-          <div className="metric-value">{activeDays}</div>
-        </div>
-        <div className="section-card metric-card">
-          <span className="metric-label">Weekly hours</span>
-          <div className="metric-value">{totalWeeklyHours || 0}h</div>
-        </div>
-        <div className="section-card metric-card">
-          <span className="metric-label">Earliest opening</span>
-          <div className="metric-value" style={{ fontSize: '1.35rem' }}>{earliestStart}</div>
-        </div>
-      </div>
 
       <section className="section-card" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
         <div className="toolbar-row">

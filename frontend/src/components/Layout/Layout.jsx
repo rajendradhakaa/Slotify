@@ -3,10 +3,14 @@ import { Link, Outlet, useLocation } from 'react-router-dom';
 import { Bell, Calendar, ChevronDown, Clock, Globe, HelpCircle, Link as LinkIcon, Moon, PanelLeftClose, PanelLeftOpen, Sun } from 'lucide-react';
 import useMediaQuery from '../../hooks/useMediaQuery';
 
-const navItems = [
-  { name: 'Event Types', path: '/event-types', icon: LinkIcon },
+const primarySteps = [
+  { name: 'Event Types', path: '/event-types', icon: LinkIcon, step: 1, helper: 'Create your first event type' },
+  { name: 'Availability', path: '/availability', icon: Clock, step: 2, helper: 'Set your working hours' },
+  { name: 'Booking Page', href: '/u/rajendradhaka', icon: Globe, step: 3, helper: 'Preview and share publicly' },
+];
+
+const secondaryNavItems = [
   { name: 'Meetings', path: '/meetings', icon: Calendar },
-  { name: 'Availability', path: '/availability', icon: Clock },
 ];
 
 const pageMeta = {
@@ -30,8 +34,17 @@ const pageMeta = {
 const SIDEBAR_COLLAPSED_STORAGE_KEY = 'slotify-sidebar-collapsed';
 
 function getCurrentPage(pathname) {
-  const matchedNav = navItems.find((item) => pathname.startsWith(item.path)) ?? navItems[0];
-  return pageMeta[matchedNav.path];
+  return pageMeta[pathname] || pageMeta['/event-types'];
+}
+
+function getActiveStep(pathname) {
+  if (pathname.startsWith('/availability')) {
+    return 2;
+  }
+  if (pathname.startsWith('/u/')) {
+    return 3;
+  }
+  return 1;
 }
 
 function BrandLockup({ collapsed = false }) {
@@ -78,6 +91,8 @@ export default function Layout({ theme = 'light', onToggleTheme }) {
   const isCompact = useMediaQuery('(max-width: 960px)');
   const isMediumDesktop = useMediaQuery('(max-width: 1240px)');
   const currentMeta = getCurrentPage(location.pathname);
+  const activeStep = getActiveStep(location.pathname);
+  const completedStepCount = Math.max(activeStep - 1, 0);
   const publicPagePath = '/u/rajendradhaka';
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -179,7 +194,7 @@ export default function Layout({ theme = 'light', onToggleTheme }) {
             bottom: 0,
             zIndex: 50,
             display: 'grid',
-            gridTemplateColumns: `repeat(${navItems.length}, minmax(0, 1fr))`,
+            gridTemplateColumns: `repeat(${primarySteps.length}, minmax(0, 1fr))`,
             gap: '0.45rem',
             padding: '0.75rem 1rem calc(0.85rem + env(safe-area-inset-bottom))',
             background: 'var(--mobile-nav-bg)',
@@ -187,28 +202,41 @@ export default function Layout({ theme = 'light', onToggleTheme }) {
             borderTop: '1px solid var(--border)',
           }}
         >
-          {navItems.map((item) => {
-            const isActive = location.pathname.startsWith(item.path);
+          {primarySteps.map((item) => {
+            const isExternal = Boolean(item.href);
+            const isActive = item.path ? location.pathname.startsWith(item.path) : false;
+            const commonStyle = {
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.32rem',
+              padding: '0.7rem 0.4rem',
+              borderRadius: '14px',
+              border: `1px solid ${isActive ? 'var(--border-strong)' : 'transparent'}`,
+              background: isActive ? 'rgba(255, 253, 247, 0.82)' : 'transparent',
+              color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+              fontSize: '0.72rem',
+              fontWeight: 700,
+            };
+
+            if (isExternal) {
+              return (
+                <a
+                  key={item.name}
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={commonStyle}
+                >
+                  <item.icon size={17} />
+                  <span>{item.name}</span>
+                </a>
+              );
+            }
 
             return (
-              <Link
-                key={item.path}
-                to={item.path}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.32rem',
-                  padding: '0.7rem 0.4rem',
-                  borderRadius: '14px',
-                  border: `1px solid ${isActive ? 'var(--border-strong)' : 'transparent'}`,
-                  background: isActive ? 'rgba(255, 253, 247, 0.82)' : 'transparent',
-                  color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
-                  fontSize: '0.72rem',
-                  fontWeight: 700,
-                }}
-              >
+              <Link key={item.path} to={item.path} style={commonStyle}>
                 <item.icon size={17} />
                 <span>{item.name}</span>
               </Link>
@@ -259,13 +287,13 @@ export default function Layout({ theme = 'light', onToggleTheme }) {
             }}
           >
             <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.68rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255, 255, 255, 0.52)' }}>
-              Public page
+              Setup progress
             </div>
             <div style={{ marginTop: '0.7rem', fontFamily: 'Syne, DM Sans, sans-serif', fontSize: '1.05rem', fontWeight: 700, letterSpacing: '-0.04em' }}>
-              Rajendra Dhaka
+              {completedStepCount}/3 completed
             </div>
             <p style={{ marginTop: '0.55rem', color: 'rgba(255, 255, 255, 0.66)', lineHeight: 1.6, fontSize: '0.92rem' }}>
-              The same event types you edit here show up on the public booking page.
+              Finish Event Types, Availability, then preview your Booking Page before sharing it.
             </p>
             <a
               href={publicPagePath}
@@ -274,7 +302,7 @@ export default function Layout({ theme = 'light', onToggleTheme }) {
               className="btn btn-light"
               style={{ width: '100%', marginTop: '1rem', justifyContent: 'space-between' }}
             >
-              Open public page
+              Preview booking page
               <Globe size={16} />
             </a>
           </div>
@@ -293,45 +321,92 @@ export default function Layout({ theme = 'light', onToggleTheme }) {
         )}
 
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-          {navItems.map((item, index) => {
-            const isActive = location.pathname.startsWith(item.path);
+          {primarySteps.map((item) => {
+            const isExternal = Boolean(item.href);
+            const isActive = item.path ? location.pathname.startsWith(item.path) : false;
+            const isCompleted = completedStepCount >= item.step;
+            const navItemStyle = {
+              display: 'grid',
+              gridTemplateColumns: isSidebarCollapsed ? '1fr' : '32px minmax(0, 1fr) 18px',
+              alignItems: 'center',
+              gap: '0.75rem',
+              padding: isSidebarCollapsed ? '0.78rem 0.55rem' : '0.85rem 0.95rem',
+              borderRadius: '16px',
+              border: `1px solid ${isActive ? 'rgba(255, 255, 255, 0.22)' : 'transparent'}`,
+              background: isActive ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
+              color: isActive ? '#fff' : 'rgba(255, 255, 255, 0.76)',
+              justifyItems: isSidebarCollapsed ? 'center' : 'stretch',
+            };
+
+            const content = isSidebarCollapsed ? (
+              <item.icon size={18} />
+            ) : (
+              <>
+                <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.76rem', color: 'rgba(255, 255, 255, 0.6)' }}>
+                  0{item.step}
+                </span>
+                <span style={{ display: 'grid', gap: '0.2rem' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', fontWeight: 700 }}>
+                    <item.icon size={17} />
+                    {item.name}
+                  </span>
+                  <span style={{ fontSize: '0.73rem', color: 'rgba(255, 255, 255, 0.56)' }}>{item.helper}</span>
+                </span>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: isCompleted ? 'var(--success)' : 'rgba(255, 255, 255, 0.2)' }} />
+              </>
+            );
+
+            if (isExternal) {
+              return (
+                <a
+                  key={item.name}
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={item.name}
+                  style={navItemStyle}
+                >
+                  {content}
+                </a>
+              );
+            }
 
             return (
-              <Link
-                key={item.path}
-                to={item.path}
-                title={item.name}
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: isSidebarCollapsed ? '1fr' : '32px minmax(0, 1fr) 18px',
-                  alignItems: 'center',
-                  gap: '0.75rem',
-                  padding: isSidebarCollapsed ? '0.78rem 0.55rem' : '0.85rem 0.95rem',
-                  borderRadius: '16px',
-                  border: `1px solid ${isActive ? 'rgba(255, 255, 255, 0.14)' : 'transparent'}`,
-                  background: isActive ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
-                  color: isActive ? '#fff' : 'rgba(255, 255, 255, 0.72)',
-                  justifyItems: isSidebarCollapsed ? 'center' : 'stretch',
-                }}
-              >
-                {isSidebarCollapsed ? (
-                  <item.icon size={18} />
-                ) : (
-                  <>
-                    <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.76rem', color: 'rgba(255, 255, 255, 0.5)' }}>
-                      0{index + 1}
-                    </span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', fontWeight: 700 }}>
-                      <item.icon size={17} />
-                      {item.name}
-                    </span>
-                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: isActive ? 'var(--accent)' : 'rgba(255, 255, 255, 0.18)' }} />
-                  </>
-                )}
+              <Link key={item.path} to={item.path} title={item.name} style={navItemStyle}>
+                {content}
               </Link>
             );
           })}
         </nav>
+
+        {!isSidebarCollapsed && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+            <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.68rem', color: 'rgba(255, 255, 255, 0.52)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              Secondary
+            </div>
+            {secondaryNavItems.map((item) => {
+              const isActive = location.pathname.startsWith(item.path);
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.6rem',
+                    padding: '0.7rem 0.9rem',
+                    borderRadius: '14px',
+                    color: isActive ? '#fff' : 'rgba(255, 255, 255, 0.7)',
+                    background: isActive ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
+                  }}
+                >
+                  <item.icon size={16} />
+                  {item.name}
+                </Link>
+              );
+            })}
+          </div>
+        )}
 
         <div
           style={{

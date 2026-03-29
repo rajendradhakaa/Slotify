@@ -11,6 +11,23 @@ from ..database import get_db
 router = APIRouter(prefix="/api/bookings", tags=["Bookings"])
 
 
+def get_public_base_url() -> str:
+    raw_value = (
+        (os.getenv("APP_BASE_URL") or "").strip()
+        or (os.getenv("PUBLIC_BASE_URL") or "").strip()
+        or (os.getenv("FRONTEND_URL") or "").strip()
+    )
+
+    if raw_value:
+        candidates = [item.strip().rstrip("/") for item in raw_value.split(",") if item.strip()]
+        for candidate in candidates:
+            if "localhost" not in candidate and "127.0.0.1" not in candidate:
+                return candidate
+        return candidates[0] if candidates else "https://slotify-iota.vercel.app"
+
+    return "https://slotify-iota.vercel.app"
+
+
 def get_smtp_settings() -> dict:
     user = (os.getenv("SMTP_USER") or "").strip()
     password = (os.getenv("SMTP_PASSWORD") or "").strip()
@@ -47,7 +64,14 @@ def send_with_smtp(message: EmailMessage, smtp: dict) -> None:
         server.send_message(message)
 
 
-def send_confirmation_email(invitee_email: str, invitee_name: str, event_name: str, start_time: datetime, end_time: datetime):
+def send_confirmation_email(
+    invitee_email: str,
+    invitee_name: str,
+    event_name: str,
+    event_slug: str,
+    start_time: datetime,
+    end_time: datetime,
+):
     smtp = get_smtp_settings()
     sender_email = smtp["user"]
     sender_password = smtp["password"]
@@ -58,46 +82,47 @@ def send_confirmation_email(invitee_email: str, invitee_name: str, event_name: s
 
     # 1. Invitee Email
     msg_invitee = EmailMessage()
-    msg_invitee['Subject'] = f"Confirmed: {event_name} with Rajendra Dhaka"
+    msg_invitee['Subject'] = f"Booking Confirmed: {event_name}"
     msg_invitee['From'] = f"Rajendra Dhaka <{sender_email}>"
     msg_invitee['To'] = invitee_email
 
     formatted_start = start_time.strftime("%A, %B %d, %Y at %I:%M %p")
     formatted_end = end_time.strftime("%I:%M %p")
+    booking_url = f"{get_public_base_url()}/book/{event_slug}"
 
-    content_invitee = f"""
-    Hi {invitee_name},
+    content_invitee = f"""Hello {invitee_name},
 
-    Your meeting has been scheduled successfully!
+Your booking has been confirmed.
 
-    Event: {event_name}
-    When: {formatted_start} - {formatted_end} (UTC)
+Meeting Details
+- Event: {event_name}
+- Date and time: {formatted_start} - {formatted_end} (UTC)
+- Booking page: {booking_url}
 
-    If you need to reschedule or cancel this event, you can do so here:
-    http://localhost:5173/book/{event_name.replace(" ", "-").lower()}
+If you need to schedule another time, please use the booking page above.
 
-    Best regards,
-    Slotify Team
-    """
+Kind regards,
+Rajendra Dhaka
+"""
     msg_invitee.set_content(content_invitee)
 
     # 2. Host Email Notification
     msg_host = EmailMessage()
-    msg_host['Subject'] = f"New Event Scheduled: {invitee_name} - {event_name}"
+    msg_host['Subject'] = f"New Booking Scheduled: {event_name}"
     msg_host['From'] = f"Slotify <{sender_email}>"
     msg_host['To'] = sender_email  # Send back to host
 
-    content_host = f"""
-    Hi Rajendra,
+    content_host = f"""Hello Rajendra,
 
-    A new event has been scheduled on your calendar!
+A new booking has been scheduled.
 
-    Invitee: {invitee_name} ({invitee_email})
-    Event: {event_name}
-    When: {formatted_start} - {formatted_end} (UTC)
+Invitee: {invitee_name} ({invitee_email})
+Event: {event_name}
+Date and time: {formatted_start} - {formatted_end} (UTC)
+Booking page: {booking_url}
 
-    View your upcoming meetings on the Slotify dashboard.
-    """
+Please review this meeting in your Slotify dashboard.
+"""
     msg_host.set_content(content_host)
 
     try:
@@ -198,6 +223,7 @@ def create_booking(data: schemas.BookingCreate, background_tasks: BackgroundTask
         invitee_email=booking.invitee_email,
         invitee_name=booking.invitee_name,
         event_name=event_type.name,
+        event_slug=event_type.slug,
         start_time=booking.start_time,
         end_time=booking.end_time
     )
