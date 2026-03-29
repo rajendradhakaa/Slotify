@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   Calendar,
   CalendarPlus,
@@ -49,8 +49,13 @@ function formatInTimezone(value, timeZone, options) {
   return new Intl.DateTimeFormat('en-US', { timeZone, ...options }).format(parseApiDate(value));
 }
 
+function getSlotDatetimeValue(slot) {
+  return slot?.datetime || slot?.datetime_utc || null;
+}
+
 export default function BookingPage() {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const isCompact = useMediaQuery('(max-width: 960px)');
   const isNarrow = useMediaQuery('(max-width: 640px)');
 
@@ -291,12 +296,13 @@ export default function BookingPage() {
         event_type_id: eventType.id,
         invitee_name: formData.name,
         invitee_email: formData.email,
-        start_time: selectedTimeSlot.datetime,
+        start_time: getSlotDatetimeValue(selectedTimeSlot),
       });
 
       sessionStorage.setItem(`booking_${slug}`, JSON.stringify(response));
       setBookingResult(response);
       setBookingStatus('success');
+      navigate(`/confirmation/${response.id}`);
     } catch (requestError) {
       setBookingStatus('idle');
       setBookingError(getApiErrorMessage(requestError, 'This time slot is no longer available. Please choose another time.'));
@@ -546,7 +552,7 @@ export default function BookingPage() {
             <div style={{ marginTop: '1.5rem', padding: '1rem', borderRadius: '22px', background: 'var(--bg-content)', border: '1px solid var(--border)' }}>
               <div style={{ fontWeight: 700 }}>Selected slot</div>
               <p className="helper-copy" style={{ marginTop: '0.45rem' }}>
-                {formatSlotDate(selectedTimeSlot.datetime)}
+                {formatSlotDate(getSlotDatetimeValue(selectedTimeSlot))}
               </p>
               <div style={{ marginTop: '0.35rem', fontWeight: 700 }}>
                 {formatSlotTime(selectedTimeSlot)}
@@ -694,9 +700,9 @@ export default function BookingPage() {
                               </div>
                               {slots.map((slot) => (
                                 <button
-                                  key={slot.datetime || slot.datetime_utc}
+                                  key={getSlotDatetimeValue(slot)}
                                   type="button"
-                                  className={`slot-button ${selectedTimeSlot?.datetime === slot.datetime && selectedTimeSlot?.time === slot.time ? 'selected' : ''}`}
+                                  className={`slot-button ${getSlotDatetimeValue(selectedTimeSlot) === getSlotDatetimeValue(slot) && selectedTimeSlot?.time === slot.time ? 'selected' : ''}`}
                                   onClick={() => handleSlotSelect(slot)}
                                 >
                                   <span>{formatSlotTime(slot)}</span>
@@ -745,7 +751,7 @@ export default function BookingPage() {
                     Step 3 - Enter Details
                   </h2>
                   <p className="helper-copy" style={{ marginTop: '0.3rem' }}>
-                    You are booking {formatShortDate(selectedTimeSlot.datetime)} at {formatSlotTime(selectedTimeSlot)}.
+                    You are booking {formatShortDate(getSlotDatetimeValue(selectedTimeSlot))} at {formatSlotTime(selectedTimeSlot)}.
                   </p>
                 </div>
                 <button type="button" className="btn btn-outline" onClick={() => setSelectedTimeSlot(null)}>
