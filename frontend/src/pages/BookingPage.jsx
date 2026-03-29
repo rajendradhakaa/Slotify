@@ -186,6 +186,18 @@ export default function BookingPage() {
     return formatTime(slot.datetime || slot.datetime_utc);
   };
 
+  const formatSlotDate = (datetimeStr) => {
+    // Format date from slot datetime WITHOUT timezone conversion
+    if (!datetimeStr) return '';
+    const date = new Date(datetimeStr);
+    return new Intl.DateTimeFormat('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    }).format(date);
+  };
+
   const handleSlotSelect = (slot) => {
     setSelectedTimeSlot(slot);
     setBookingError('');
@@ -457,10 +469,10 @@ export default function BookingPage() {
             <div style={{ marginTop: '1.5rem', padding: '1rem', borderRadius: '22px', background: 'white', border: '1px solid rgba(22, 37, 79, 0.08)' }}>
               <div style={{ fontWeight: 700 }}>Selected slot</div>
               <p className="helper-copy" style={{ marginTop: '0.45rem' }}>
-                {formatFullDate(selectedTimeSlot.datetime_utc)}
+                {formatSlotDate(selectedTimeSlot.datetime)}
               </p>
               <div style={{ marginTop: '0.35rem', fontWeight: 700 }}>
-                {formatTime(selectedTimeSlot.datetime_utc)}
+                {formatSlotTime(selectedTimeSlot)}
               </div>
             </div>
           ) : null}
@@ -609,7 +621,7 @@ export default function BookingPage() {
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
                   <div className="status-chip success">{eventType.name}</div>
                   <div className="status-chip muted">{eventType.duration} minutes</div>
-                  <div className="status-chip muted">{formatTime(selectedTimeSlot.datetime_utc)}</div>
+                  <div className="status-chip muted">{formatSlotTime(selectedTimeSlot)}</div>
                 </div>
               </div>
 
