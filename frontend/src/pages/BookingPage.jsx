@@ -43,46 +43,71 @@ export default function BookingPage() {
   const [timeError, setTimeError] = useState(null);
 
   useEffect(() => {
-    fetchEventType();
-    
+    let ignore = false;
+
+    const loadEventType = async () => {
+      try {
+        const data = await eventTypesApi.getBySlug(slug);
+        if (!ignore) {
+          setEventType(data);
+        }
+      } catch (error) {
+        if (!ignore) {
+          setError('Event type not found or unavailable.');
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadEventType();
+
     const storedBooking = sessionStorage.getItem(`booking_${slug}`);
     if (storedBooking) {
       setBookingResult(JSON.parse(storedBooking));
       setBookingStatus('success');
     }
+
+    return () => {
+      ignore = true;
+    };
   }, [slug]);
 
   useEffect(() => {
-    if (selectedDate && eventType) {
-      fetchSlots(selectedDate);
+    if (!selectedDate || !eventType) {
+      setAvailableSlots([]);
+      return;
     }
-  }, [selectedDate, eventType]);
 
-  const fetchEventType = async () => {
-    try {
-      const data = await eventTypesApi.getBySlug(slug);
-      setEventType(data);
-    } catch (error) {
-      setError('Event type not found or unavailable.');
-    } finally {
-      setLoading(false);
-    }
-  };
+    let ignore = false;
 
-  const fetchSlots = async (date) => {
-    setLoadingSlots(true);
-    setAvailableSlots([]);
-    setSelectedTimeSlot(null);
-    try {
-      const dateStr = format(date, 'yyyy-MM-dd');
-      const data = await availabilityApi.getSlots(slug, dateStr);
-      setAvailableSlots(data.slots || []);
-    } catch (error) {
-      console.error('Error fetching slots:', error);
-    } finally {
-      setLoadingSlots(false);
-    }
-  };
+    const loadSlots = async () => {
+      setLoadingSlots(true);
+      setAvailableSlots([]);
+      setSelectedTimeSlot(null);
+      try {
+        const dateStr = format(selectedDate, 'yyyy-MM-dd');
+        const data = await availabilityApi.getSlots(slug, dateStr);
+        if (!ignore) {
+          setAvailableSlots(data.slots || []);
+        }
+      } catch (error) {
+        console.error('Error fetching slots:', error);
+      } finally {
+        if (!ignore) {
+          setLoadingSlots(false);
+        }
+      }
+    };
+
+    loadSlots();
+
+    return () => {
+      ignore = true;
+    };
+  }, [selectedDate, eventType, slug]);
 
   const handleBook = async (e) => {
     e.preventDefault();
@@ -102,7 +127,10 @@ export default function BookingPage() {
     } catch (error) {
       setBookingStatus('error');
       alert(error.response?.data?.detail || 'This time slot is no longer available. Please select another time.');
-      fetchSlots(selectedDate);
+      setSelectedTimeSlot(null);
+      setSelectedDate((currentDateValue) =>
+        currentDateValue ? new Date(currentDateValue) : currentDateValue
+      );
     }
   };
 
@@ -385,7 +413,12 @@ export default function BookingPage() {
                           >
                             {validatingTime ? 'Checking...' : 'Continue'}
                           </button>
-                          {availableSlots.length > 0 && (
+                          {loadingSlots && (
+                            <p style={{ marginTop: '1rem', fontSize: '0.8rem', color: 'var(--text-secondary)', textAlign: 'center' }}>
+                              Loading availability...
+                            </p>
+                          )}
+                          {!loadingSlots && availableSlots.length > 0 && (
                             <p style={{ marginTop: '1rem', fontSize: '0.8rem', color: 'var(--text-secondary)', textAlign: 'center' }}>
                               (Suggested first available: {fTime(availableSlots[0].datetime_utc)})
                             </p>

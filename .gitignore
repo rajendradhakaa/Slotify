@@ -1,0 +1,22 @@
+# Local environments
+.env
+.env.*
+
+# Dependency and build folders
+**/node_modules/
+**/dist/
+**/dist-ssr/
+**/venv/
+
+# Python cache
+**/__pycache__/
+*.py[cod]
+
+# Vercel
+.vercel/
+
+# macOS metadata
+.DS_Store
+**/.DS_Store
+**/._*
+**/.__*

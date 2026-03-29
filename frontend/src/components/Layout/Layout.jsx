@@ -3,14 +3,9 @@ import {
   Calendar,
   Clock,
   Link as LinkIcon,
-  Users,
-  Zap,
-  LayoutGrid,
-  Navigation,
   Plus,
   HelpCircle,
   Bell,
-  User,
   ChevronDown
 } from 'lucide-react';
 

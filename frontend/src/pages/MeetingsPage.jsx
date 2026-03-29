@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Clock, Calendar, Globe, XCircle, ExternalLink } from 'lucide-react';
+import { Clock, Calendar, XCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { bookingsApi } from '../api';
 
@@ -9,33 +9,47 @@ export default function MeetingsPage() {
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    fetchMeetings();
-  }, [activeTab]);
+    let ignore = false;
 
-  const fetchMeetings = async () => {
-    setLoading(true);
-    try {
-      const isUpcoming = activeTab === 'upcoming' ? true : false;
-      const data = await bookingsApi.getAll(isUpcoming);
-      // Sort: Upcoming (earliest first), Past (most recent first)
-      data.sort((a, b) => {
-        const dateA = new Date(a.start_time).getTime();
-        const dateB = new Date(b.start_time).getTime();
-        return isUpcoming ? dateA - dateB : dateB - dateA;
-      });
-      setMeetings(data);
-    } catch (error) {
-      console.error('Error fetching meetings:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const loadMeetings = async () => {
+      setLoading(true);
+      try {
+        const isUpcoming = activeTab === 'upcoming';
+        const data = await bookingsApi.getAll(isUpcoming);
+        data.sort((a, b) => {
+          const dateA = new Date(a.start_time).getTime();
+          const dateB = new Date(b.start_time).getTime();
+          return isUpcoming ? dateA - dateB : dateB - dateA;
+        });
+
+        if (!ignore) {
+          setMeetings(data);
+        }
+      } catch (error) {
+        console.error('Error fetching meetings:', error);
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadMeetings();
+
+    return () => {
+      ignore = true;
+    };
+  }, [activeTab]);
 
   const handleCancel = async (id) => {
     if (window.confirm('Are you confirm to cancel this scheduled meeting?')) {
       try {
         await bookingsApi.cancel(id);
-        fetchMeetings();
+        setMeetings((currentMeetings) =>
+          currentMeetings.map((meeting) =>
+            meeting.id === id ? { ...meeting, status: 'cancelled' } : meeting
+          )
+        );
       } catch (error) {
         alert('Could not cancel meeting');
       }

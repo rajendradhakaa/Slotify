@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Copy, Plus, Trash2, Edit2, Link as LinkIcon, ExternalLink, HelpCircle, Search, Settings } from 'lucide-react';
+import { Copy, Plus, Trash2, Edit2, Link as LinkIcon, ExternalLink, HelpCircle, Search } from 'lucide-react';
 import { eventTypesApi } from '../api';
 
 export default function EventTypesPage() {
