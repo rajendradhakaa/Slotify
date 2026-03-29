@@ -11,7 +11,7 @@ import {
   Search,
   Trash2,
 } from 'lucide-react';
-import { eventTypesApi, getApiErrorMessage } from '../api';
+import { availabilityApi, eventTypesApi, getApiErrorMessage } from '../api';
 import useMediaQuery from '../hooks/useMediaQuery';
 
 const DEFAULT_EVENT_FORM = {
@@ -40,10 +40,15 @@ export default function EventTypesPage() {
   const [formData, setFormData] = useState(DEFAULT_EVENT_FORM);
   const [editingId, setEditingId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [hasConfiguredAvailability, setHasConfiguredAvailability] = useState(false);
   const [feedback, setFeedback] = useState(null);
 
   useEffect(() => {
-    fetchEventTypes();
+    const loadPageData = async () => {
+      await Promise.all([fetchEventTypes(), fetchAvailabilityStatus()]);
+    };
+
+    loadPageData();
   }, []);
 
   useEffect(() => {
@@ -64,6 +69,15 @@ export default function EventTypesPage() {
       setFeedback({ type: 'error', message: getApiErrorMessage(error, 'Could not load event types.') });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAvailabilityStatus = async () => {
+    try {
+      const rules = await availabilityApi.getAll();
+      setHasConfiguredAvailability(Array.isArray(rules) && rules.some((rule) => rule.is_active));
+    } catch {
+      setHasConfiguredAvailability(false);
     }
   };
 
@@ -204,7 +218,7 @@ export default function EventTypesPage() {
   const hasAtLeastOneEvent = eventTypes.length > 0;
   const onboardingItems = [
     { label: 'Event created', done: hasAtLeastOneEvent },
-    { label: 'Availability set', done: null, hint: 'Go to Availability step next' },
+    { label: 'Availability set', done: hasConfiguredAvailability, hint: 'Go to Availability step next' },
     { label: 'Booking page live', done: activeCount > 0 },
   ];
 
@@ -265,8 +279,17 @@ export default function EventTypesPage() {
 
           <div style={{ padding: '0.9rem', borderRadius: '14px', background: 'var(--surface-muted)', border: '1px solid var(--border)' }}>
             <div style={{ fontWeight: 700 }}>Booking page preview</div>
-            <p className="helper-copy" style={{ marginTop: '0.35rem' }}>
-              /u/rajendradhaka {'->'} visitors choose an event type, then date, then time.
+            <div style={{ marginTop: '0.6rem', borderRadius: '12px', border: '1px solid var(--border)', overflow: 'hidden', background: 'var(--bg-content)' }}>
+              <div style={{ padding: '0.5rem 0.65rem', borderBottom: '1px solid var(--border)', fontSize: '0.76rem', color: 'var(--text-secondary)' }}>
+                /u/rajendradhaka
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', padding: '0.65rem' }}>
+                <div style={{ border: '1px solid var(--border)', borderRadius: '10px', padding: '0.5rem', fontSize: '0.75rem' }}>Step 1: Select date</div>
+                <div style={{ border: '1px solid var(--border)', borderRadius: '10px', padding: '0.5rem', fontSize: '0.75rem' }}>Step 2: Select time</div>
+              </div>
+            </div>
+            <p className="helper-copy" style={{ marginTop: '0.45rem' }}>
+              Visitors choose an event type, then date and time, and confirm in one flow.
             </p>
           </div>
         </div>

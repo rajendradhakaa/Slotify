@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Calendar, Clock, Mail, Search, XCircle } from 'lucide-react';
-import { differenceInMinutes, format, isToday, isTomorrow } from 'date-fns';
+import { format, isToday, isTomorrow } from 'date-fns';
 import { bookingsApi, getApiErrorMessage } from '../api';
 import useMediaQuery from '../hooks/useMediaQuery';
 
@@ -107,12 +107,6 @@ export default function MeetingsPage() {
     ));
   }, [meetings, searchQuery]);
 
-  const scheduledCount = filteredMeetings.filter((meeting) => meeting.status === 'scheduled').length;
-  const cancelledCount = filteredMeetings.filter((meeting) => meeting.status === 'cancelled').length;
-  const totalHours = filteredMeetings.reduce((sum, meeting) => (
-    sum + differenceInMinutes(parseApiDate(meeting.end_time), parseApiDate(meeting.start_time))
-  ), 0) / 60;
-
   return (
     <div className="dashboard-page">
       {feedback ? (
@@ -122,35 +116,12 @@ export default function MeetingsPage() {
         </div>
       ) : null}
 
-      <section className="page-hero">
-        <div className="eyebrow">
-          <Calendar size={14} />
-          Meeting log
-        </div>
-        <h1 className="hero-title">See what is coming up and what already happened</h1>
-        <p className="hero-copy">
-          A quieter view of your bookings, with just enough detail to act on the next thing quickly.
-        </p>
+      <section className="section-card" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <h1 style={{ fontFamily: 'Syne, DM Sans, sans-serif', fontSize: isCompact ? '1.55rem' : '1.8rem', fontWeight: 800, letterSpacing: '-0.04em' }}>
+          Meetings
+        </h1>
+        <p className="helper-copy">Track upcoming and past bookings in one focused list.</p>
       </section>
-
-      <div className="metrics-grid">
-        <div className="section-card metric-card">
-          <span className="metric-label">{activeTab === 'upcoming' ? 'Upcoming meetings' : 'Past meetings'}</span>
-          <div className="metric-value">{filteredMeetings.length}</div>
-        </div>
-        <div className="section-card metric-card">
-          <span className="metric-label">Scheduled</span>
-          <div className="metric-value">{scheduledCount}</div>
-        </div>
-        <div className="section-card metric-card">
-          <span className="metric-label">Cancelled</span>
-          <div className="metric-value">{cancelledCount}</div>
-        </div>
-        <div className="section-card metric-card">
-          <span className="metric-label">Time on calendar</span>
-          <div className="metric-value">{totalHours.toFixed(1)}h</div>
-        </div>
-      </div>
 
       <section className="section-card" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
         <div className="toolbar-row">

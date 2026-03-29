@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { Bell, Calendar, ChevronDown, Clock, Globe, HelpCircle, Link as LinkIcon, Moon, PanelLeftClose, PanelLeftOpen, Sun } from 'lucide-react';
+import { Calendar, Clock, Globe, Link as LinkIcon, Moon, PanelLeftClose, PanelLeftOpen, Sun } from 'lucide-react';
 import useMediaQuery from '../../hooks/useMediaQuery';
 
 const primarySteps = [
@@ -479,6 +479,9 @@ export default function Layout({ theme = 'light', onToggleTheme }) {
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexShrink: 0 }}>
+              <div className="status-chip muted" style={{ minHeight: '44px', display: 'inline-flex', alignItems: 'center', paddingInline: '0.8rem' }}>
+                Step {activeStep}/3
+              </div>
               <button
                 className="btn btn-outline"
                 onClick={onToggleTheme}
@@ -488,41 +491,10 @@ export default function Layout({ theme = 'light', onToggleTheme }) {
               >
                 <ThemeIcon size={18} />
               </button>
-              <a href={publicPagePath} target="_blank" rel="noopener noreferrer" className="btn btn-outline" style={{ gap: '0.45rem' }}>
+              <a href={publicPagePath} target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ gap: '0.45rem' }}>
                 <Globe size={16} />
-                Public page
+                Preview booking page
               </a>
-              <button className="btn btn-outline" style={{ width: '44px', minHeight: '44px', padding: 0 }} aria-label="Help">
-                <HelpCircle size={18} />
-              </button>
-              <button className="btn btn-outline" style={{ width: '44px', minHeight: '44px', padding: 0 }} aria-label="Notifications">
-                <Bell size={18} />
-              </button>
-              <div
-                className="card"
-                style={{
-                  padding: '0.3rem 0.35rem 0.3rem 0.3rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.45rem',
-                }}
-              >
-                <div
-                  style={{
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: '11px',
-                    background: 'var(--surface-muted)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontWeight: 700,
-                  }}
-                >
-                  R
-                </div>
-                <ChevronDown size={16} color="var(--text-secondary)" />
-              </div>
             </div>
           </div>
         </header>

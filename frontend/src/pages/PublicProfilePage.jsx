@@ -43,21 +43,19 @@ export default function PublicProfilePage() {
   return (
     <div style={{ minHeight: '100vh', padding: isCompact ? '1.2rem 1rem 2rem' : '2rem 1rem 3rem' }}>
       <div style={{ maxWidth: '1040px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-        <section className="page-hero">
-          <div className="eyebrow">
-            <Globe size={14} />
-            Rajendra Dhaka
-          </div>
-          <h1 className="hero-title" style={{ maxWidth: '740px' }}>Book time with Rajendra Dhaka</h1>
-          <p className="hero-copy" style={{ maxWidth: '700px' }}>
-            Pick the kind of conversation you need. Each option below opens a live calendar with the times that are actually available.
+        <section className="section-card" style={{ display: 'grid', gap: '0.65rem' }}>
+          <h1 style={{ fontFamily: 'Syne, DM Sans, sans-serif', fontSize: isCompact ? '1.5rem' : '1.85rem', fontWeight: 800, letterSpacing: '-0.04em' }}>
+            Book time with Rajendra Dhaka
+          </h1>
+          <p className="helper-copy">
+            Choose a session below. You will select date, time, and confirm in one flow.
           </p>
-          <div className="action-row" style={{ marginTop: '1.25rem' }}>
-            <span className="status-chip" style={{ background: 'var(--primary-soft)', color: 'var(--text-primary)' }}>
+          <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+            <span className="status-chip muted">
               <Clock size={14} />
-              Asia/Kolkata host timezone
+              Asia/Kolkata
             </span>
-            <span className="status-chip" style={{ background: 'var(--primary-soft)', color: 'var(--text-primary)' }}>
+            <span className="status-chip success">
               <Globe size={14} />
               {publicEvents.length} live event types
             </span>
