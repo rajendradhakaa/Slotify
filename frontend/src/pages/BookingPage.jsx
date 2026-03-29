@@ -198,6 +198,17 @@ export default function BookingPage() {
     }).format(date);
   };
 
+  const formatBookingTime = (datetimeStr) => {
+    // Format booking confirmation times WITHOUT timezone conversion
+    if (!datetimeStr) return '';
+    const date = new Date(datetimeStr);
+    return new Intl.DateTimeFormat('en-US', {
+      hour: 'numeric',
+      minute: 'numeric',
+      hour12: true,
+    }).format(date);
+  };
+
   const handleSlotSelect = (slot) => {
     setSelectedTimeSlot(slot);
     setBookingError('');
@@ -359,11 +370,11 @@ export default function BookingPage() {
             <div style={{ display: 'grid', gap: '0.75rem', marginTop: '1rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', color: 'var(--text-secondary)' }}>
                 <Calendar size={16} />
-                {formatFullDate(bookingResult.start_time)}
+                {formatSlotDate(bookingResult.start_time)}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', color: 'var(--text-secondary)' }}>
                 <Clock size={16} />
-                {formatTime(bookingResult.start_time)} - {formatTime(bookingResult.end_time)} ({userTimezone})
+                {formatBookingTime(bookingResult.start_time)} - {formatBookingTime(bookingResult.end_time)} ({userTimezone})
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', color: 'var(--text-secondary)' }}>
                 <Globe size={16} />
