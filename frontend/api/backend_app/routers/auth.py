@@ -5,7 +5,7 @@ import secrets
 from typing import Optional
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import RedirectResponse
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from ..database import get_db
@@ -17,12 +17,12 @@ router = APIRouter(prefix="/api/auth", tags=["Auth"])
 
 class RegisterRequest(BaseModel):
     name: str
-    email: EmailStr
+    email: str
     password: str
 
 
 class LoginRequest(BaseModel):
-    email: EmailStr
+    email: str
     password: str
 
 
@@ -63,6 +63,8 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Name should have at least 2 characters")
     if len(password) < 8:
         raise HTTPException(status_code=400, detail="Password should have at least 8 characters")
+    if "@" not in email or "." not in email.split("@")[-1]:
+        raise HTTPException(status_code=400, detail="Invalid email format")
 
     existing = db.query(models.User).filter(models.User.email == email).first()
     if existing:
@@ -101,6 +103,9 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
 def login(payload: LoginRequest, db: Session = Depends(get_db)):
     email = payload.email.strip().lower()
     password = payload.password
+
+    if "@" not in email:
+        raise HTTPException(status_code=400, detail="Invalid email format")
 
     user = db.query(models.User).filter(models.User.email == email).first()
     if not user:
