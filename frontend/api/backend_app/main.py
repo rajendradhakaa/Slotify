@@ -23,6 +23,7 @@ app.include_router(event_types.router)
 app.include_router(availability.router)
 app.include_router(bookings.router)
 app.include_router(users.router)
+app.include_router(users.compat_router)
 
 
 @app.on_event("startup")

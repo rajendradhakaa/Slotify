@@ -11,9 +11,46 @@ from ..database import get_db
 router = APIRouter(prefix="/api/bookings", tags=["Bookings"])
 
 
+def get_smtp_settings() -> dict:
+    user = (os.getenv("SMTP_USER") or "").strip()
+    password = (os.getenv("SMTP_PASSWORD") or "").strip()
+    host = (os.getenv("SMTP_HOST") or "smtp.gmail.com").strip()
+    port = int((os.getenv("SMTP_PORT") or "465").strip())
+    use_tls = (os.getenv("SMTP_USE_TLS") or "false").strip().lower() in {"1", "true", "yes"}
+
+    return {
+        "user": user,
+        "password": password,
+        "host": host,
+        "port": port,
+        "use_tls": use_tls,
+    }
+
+
+def send_with_smtp(message: EmailMessage, smtp: dict) -> None:
+    host = smtp["host"]
+    port = smtp["port"]
+    user = smtp["user"]
+    password = smtp["password"]
+
+    if smtp["use_tls"]:
+        with smtplib.SMTP(host, port, timeout=20) as server:
+            server.ehlo()
+            server.starttls()
+            server.ehlo()
+            server.login(user, password)
+            server.send_message(message)
+        return
+
+    with smtplib.SMTP_SSL(host, port, timeout=20) as server:
+        server.login(user, password)
+        server.send_message(message)
+
+
 def send_confirmation_email(invitee_email: str, invitee_name: str, event_name: str, start_time: datetime, end_time: datetime):
-    sender_email = os.getenv("SMTP_USER")
-    sender_password = os.getenv("SMTP_PASSWORD")
+    smtp = get_smtp_settings()
+    sender_email = smtp["user"]
+    sender_password = smtp["password"]
     
     if not sender_email or not sender_password:
         print("SMTP credentials not configured. Skipping email send.")
@@ -64,10 +101,8 @@ def send_confirmation_email(invitee_email: str, invitee_name: str, event_name: s
     msg_host.set_content(content_host)
 
     try:
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-            server.login(sender_email, sender_password)
-            server.send_message(msg_invitee)
-            server.send_message(msg_host)
+        send_with_smtp(msg_invitee, smtp)
+        send_with_smtp(msg_host, smtp)
         print(f"Confirmation emails sent to {invitee_email} and {sender_email}")
     except Exception as e:
         print(f"Failed to send emails: {e}")
@@ -79,8 +114,9 @@ def test_email_config(test_email: str = "test@gmail.com"):
     Test endpoint to verify email configuration works.
     Send a test email to verify SMTP settings are correct.
     """
-    sender_email = os.getenv("SMTP_USER")
-    sender_password = os.getenv("SMTP_PASSWORD")
+    smtp = get_smtp_settings()
+    sender_email = smtp["user"]
+    sender_password = smtp["password"]
     
     if not sender_email or not sender_password:
         return {
@@ -106,9 +142,7 @@ Slotify Team
     """)
 
     try:
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-            server.login(sender_email, sender_password)
-            server.send_message(msg)
+        send_with_smtp(msg, smtp)
         return {
             "status": "success",
             "message": f"Test email sent successfully to {test_email}",

@@ -53,11 +53,11 @@ export default function PublicProfilePage() {
             Pick the kind of conversation you need. Each option below opens a live calendar with the times that are actually available.
           </p>
           <div className="action-row" style={{ marginTop: '1.25rem' }}>
-            <span className="status-chip" style={{ background: 'rgba(255, 255, 255, 0.16)', color: 'white' }}>
+            <span className="status-chip" style={{ background: 'var(--primary-soft)', color: 'var(--text-primary)' }}>
               <Clock size={14} />
               Asia/Kolkata host timezone
             </span>
-            <span className="status-chip" style={{ background: 'rgba(255, 255, 255, 0.16)', color: 'white' }}>
+            <span className="status-chip" style={{ background: 'var(--primary-soft)', color: 'var(--text-primary)' }}>
               <Globe size={14} />
               {publicEvents.length} live event types
             </span>
@@ -89,7 +89,7 @@ export default function PublicProfilePage() {
                   overflow: 'hidden',
                   textAlign: 'left',
                   alignItems: 'stretch',
-                  background: 'rgba(255, 255, 255, 0.95)',
+                  background: 'var(--bg-content)',
                   transition: 'transform 0.2s ease, box-shadow 0.2s ease',
                 }}
                 onMouseOver={(e) => {

@@ -26,6 +26,8 @@ import {
 import { availabilityApi, bookingsApi, eventTypesApi, getApiErrorMessage } from '../api';
 import useMediaQuery from '../hooks/useMediaQuery';
 
+const SLOTS_BATCH_SIZE = 8;
+
 function parseApiDate(value) {
   if (!value) {
     return new Date();
@@ -61,6 +63,7 @@ export default function BookingPage() {
   const [useCustomTime, setUseCustomTime] = useState(false);
   const [customTimeInput, setCustomTimeInput] = useState('');
   const [availableSlots, setAvailableSlots] = useState([]);
+  const [visibleSlotCount, setVisibleSlotCount] = useState(SLOTS_BATCH_SIZE);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [formData, setFormData] = useState({ name: '', email: '' });
   const [bookingStatus, setBookingStatus] = useState('idle');
@@ -120,6 +123,7 @@ export default function BookingPage() {
   useEffect(() => {
     if (!selectedDate || !eventType) {
       setAvailableSlots([]);
+      setVisibleSlotCount(SLOTS_BATCH_SIZE);
       setSelectedTimeSlot(null);
       return;
     }
@@ -128,6 +132,7 @@ export default function BookingPage() {
 
     const loadSlots = async () => {
       setLoadingSlots(true);
+      setVisibleSlotCount(SLOTS_BATCH_SIZE);
       setSelectedTimeSlot(null);
       setBookingError('');
       try {
@@ -154,13 +159,6 @@ export default function BookingPage() {
       ignore = true;
     };
   }, [eventType, selectedDate, slug]);
-
-  const formatFullDate = (value) => formatInTimezone(value, userTimezone, {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  });
 
   const formatShortDate = (value) => formatInTimezone(value, userTimezone, {
     weekday: 'long',
@@ -211,6 +209,9 @@ export default function BookingPage() {
       hour12: true,
     }).format(date);
   };
+
+  const visibleSlots = availableSlots.slice(0, visibleSlotCount);
+  const hasMoreSlots = availableSlots.length > visibleSlotCount;
 
   const handleSlotSelect = (slot) => {
     setSelectedTimeSlot(slot);
@@ -393,8 +394,8 @@ export default function BookingPage() {
               marginTop: '1.5rem',
               padding: '1.2rem',
               borderRadius: '24px',
-              background: 'var(--surface-muted)',
-              border: '1px solid rgba(22, 37, 79, 0.08)',
+              background: 'var(--bg-content)',
+              border: '1px solid var(--border)',
               textAlign: 'left',
             }}
           >
@@ -447,10 +448,9 @@ export default function BookingPage() {
         <aside
           style={{
             padding: isNarrow ? '1.25rem' : '1.6rem',
-            borderRight: isCompact ? 'none' : '1px solid rgba(22, 37, 79, 0.08)',
-            borderBottom: isCompact ? '1px solid rgba(22, 37, 79, 0.08)' : 'none',
-            background:
-              'radial-gradient(circle at top left, rgba(20, 87, 255, 0.12), transparent 45%), linear-gradient(180deg, rgba(244, 247, 255, 0.96) 0%, rgba(255, 255, 255, 0.94) 100%)',
+            borderRight: isCompact ? 'none' : `1px solid var(--border)`,
+            borderBottom: isCompact ? `1px solid var(--border)` : 'none',
+            background: 'var(--bg-content)',
           }}
         >
           <div
@@ -495,7 +495,7 @@ export default function BookingPage() {
             </div>
           </div>
 
-          <div style={{ marginTop: '1.5rem', padding: '1rem', borderRadius: '22px', background: 'rgba(20, 87, 255, 0.06)', border: '1px solid rgba(20, 87, 255, 0.12)' }}>
+          <div style={{ marginTop: '1.5rem', padding: '1rem', borderRadius: '22px', background: 'var(--primary-soft)', border: `1px solid var(--primary-ring)` }}>
             <div style={{ fontWeight: 700 }}>Booking steps</div>
             <div className="stat-line">
               <span>Date selected</span>
@@ -512,7 +512,7 @@ export default function BookingPage() {
           </div>
 
           {(selectedDate && selectedTimeSlot) ? (
-            <div style={{ marginTop: '1.5rem', padding: '1rem', borderRadius: '22px', background: 'white', border: '1px solid rgba(22, 37, 79, 0.08)' }}>
+            <div style={{ marginTop: '1.5rem', padding: '1rem', borderRadius: '22px', background: 'var(--bg-content)', border: '1px solid var(--border)' }}>
               <div style={{ fontWeight: 700 }}>Selected slot</div>
               <p className="helper-copy" style={{ marginTop: '0.45rem' }}>
                 {formatSlotDate(selectedTimeSlot.datetime)}
@@ -631,7 +631,7 @@ export default function BookingPage() {
                       </button>
                     </div>
                     {useCustomTime ? (
-                      <div style={{ display: 'grid', gap: '0.75rem', padding: '1rem', borderRadius: '16px', background: 'rgba(20, 87, 255, 0.06)', border: '1px solid rgba(20, 87, 255, 0.12)' }}>
+                      <div style={{ display: 'grid', gap: '0.75rem', padding: '1rem', borderRadius: '16px', background: 'var(--primary-soft)', border: `1px solid var(--primary-ring)` }}>
                         <label className="form-label">Enter time (HH:MM)</label>
                         <input
                           type="time"
@@ -651,19 +651,44 @@ export default function BookingPage() {
                         </button>
                       </div>
                     ) : (
-                      availableSlots.map((slot) => (
-                        <button
-                          key={slot.datetime || slot.datetime_utc}
-                          type="button"
-                          className={`slot-button ${selectedTimeSlot?.datetime === slot.datetime && selectedTimeSlot?.time === slot.time ? 'selected' : ''}`}
-                          onClick={() => handleSlotSelect(slot)}
-                        >
-                          <span>{formatSlotTime(slot)}</span>
-                          <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
-                            {eventType.duration} min
-                          </span>
-                        </button>
-                      ))
+                      <>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>
+                          Showing {visibleSlots.length} of {availableSlots.length} slots
+                        </div>
+                        {visibleSlots.map((slot) => (
+                          <button
+                            key={slot.datetime || slot.datetime_utc}
+                            type="button"
+                            className={`slot-button ${selectedTimeSlot?.datetime === slot.datetime && selectedTimeSlot?.time === slot.time ? 'selected' : ''}`}
+                            onClick={() => handleSlotSelect(slot)}
+                          >
+                            <span>{formatSlotTime(slot)}</span>
+                            <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                              {eventType.duration} min
+                            </span>
+                          </button>
+                        ))}
+
+                        {hasMoreSlots ? (
+                          <button
+                            type="button"
+                            className="btn btn-outline"
+                            onClick={() => setVisibleSlotCount((count) => count + SLOTS_BATCH_SIZE)}
+                            style={{ minHeight: '38px', fontSize: '0.82rem' }}
+                          >
+                            Show more slots
+                          </button>
+                        ) : availableSlots.length > SLOTS_BATCH_SIZE ? (
+                          <button
+                            type="button"
+                            className="btn btn-outline"
+                            onClick={() => setVisibleSlotCount(SLOTS_BATCH_SIZE)}
+                            style={{ minHeight: '38px', fontSize: '0.82rem' }}
+                          >
+                            Show fewer slots
+                          </button>
+                        ) : null}
+                      </>
                     )}
                   </div>
                 )}
@@ -694,7 +719,7 @@ export default function BookingPage() {
                   padding: '1rem',
                   borderRadius: '22px',
                   background: 'var(--surface-muted)',
-                  border: '1px solid rgba(22, 37, 79, 0.08)',
+                  border: '1px solid var(--border)',
                 }}
               >
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
@@ -790,14 +815,14 @@ export default function BookingPage() {
 
         .calendar-cell:hover:not(.disabled) {
           transform: translateY(-1px);
-          border-color: rgba(20, 87, 255, 0.18);
+          border-color: var(--primary-ring);
           box-shadow: 0 12px 24px rgba(20, 87, 255, 0.08);
         }
 
         .calendar-cell.disabled {
-          color: #b5bed1;
+          color: var(--text-muted);
           cursor: default;
-          background: rgba(255, 255, 255, 0.55);
+          background: var(--surface-muted);
         }
 
         .calendar-cell.selected {

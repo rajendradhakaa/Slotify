@@ -1,5 +1,6 @@
+import { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { Bell, Calendar, ChevronDown, Clock, Globe, HelpCircle, Link as LinkIcon } from 'lucide-react';
+import { Bell, Calendar, ChevronDown, Clock, Globe, HelpCircle, Link as LinkIcon, Moon, PanelLeftClose, PanelLeftOpen, Sun } from 'lucide-react';
 import useMediaQuery from '../../hooks/useMediaQuery';
 
 const navItems = [
@@ -26,14 +27,20 @@ const pageMeta = {
   },
 };
 
+const SIDEBAR_COLLAPSED_STORAGE_KEY = 'slotify-sidebar-collapsed';
+
 function getCurrentPage(pathname) {
   const matchedNav = navItems.find((item) => pathname.startsWith(item.path)) ?? navItems[0];
   return pageMeta[matchedNav.path];
 }
 
-function BrandLockup() {
+function BrandLockup({ collapsed = false }) {
   return (
-    <Link to="/event-types" style={{ display: 'flex', alignItems: 'center', gap: '0.95rem' }}>
+    <Link
+      to="/event-types"
+      style={{ display: 'flex', alignItems: 'center', gap: collapsed ? '0' : '0.95rem', justifyContent: collapsed ? 'center' : 'flex-start' }}
+      title="Go to Event Types"
+    >
       <div
         style={{
           width: '42px',
@@ -52,23 +59,43 @@ function BrandLockup() {
       >
         S
       </div>
-      <div>
-        <div style={{ fontFamily: 'Syne, DM Sans, sans-serif', fontSize: '1.12rem', fontWeight: 700, letterSpacing: '-0.04em' }}>
-          Slotify
+      {!collapsed && (
+        <div>
+          <div style={{ fontFamily: 'Syne, DM Sans, sans-serif', fontSize: '1.12rem', fontWeight: 700, letterSpacing: '-0.04em' }}>
+            Slotify
+          </div>
+          <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.7rem', color: 'rgba(255, 255, 255, 0.58)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+            Calendar system
+          </div>
         </div>
-        <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.7rem', color: 'rgba(255, 255, 255, 0.58)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-          Calendar system
-        </div>
-      </div>
+      )}
     </Link>
   );
 }
 
-export default function Layout() {
+export default function Layout({ theme = 'light', onToggleTheme }) {
   const location = useLocation();
   const isCompact = useMediaQuery('(max-width: 960px)');
+  const isMediumDesktop = useMediaQuery('(max-width: 1240px)');
   const currentMeta = getCurrentPage(location.pathname);
   const publicPagePath = '/u/rajendradhaka';
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === 'true';
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(SIDEBAR_COLLAPSED_STORAGE_KEY, String(isSidebarCollapsed));
+  }, [isSidebarCollapsed]);
+
+  const ThemeIcon = theme === 'dark' ? Sun : Moon;
+  const nextThemeLabel = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+  const sidebarExpandedWidth = isMediumDesktop ? 248 : 288;
+  const sidebarCollapsedWidth = 96;
+  const sidebarWidth = isSidebarCollapsed ? sidebarCollapsedWidth : sidebarExpandedWidth;
+  const SidebarToggleIcon = isSidebarCollapsed ? PanelLeftOpen : PanelLeftClose;
+  const sidebarToggleLabel = isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar';
 
   if (isCompact) {
     return (
@@ -79,7 +106,7 @@ export default function Layout() {
             top: 0,
             zIndex: 40,
             padding: '1rem 1rem 0',
-            background: 'rgba(250, 246, 238, 0.88)',
+            background: 'var(--header-glass-bg)',
             backdropFilter: 'blur(18px)',
           }}
         >
@@ -103,6 +130,15 @@ export default function Layout() {
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
+              <button
+                className="btn btn-outline"
+                onClick={onToggleTheme}
+                style={{ minHeight: '40px', width: '40px', padding: 0 }}
+                aria-label={nextThemeLabel}
+                title={nextThemeLabel}
+              >
+                <ThemeIcon size={16} />
+              </button>
               <a
                 href={publicPagePath}
                 target="_blank"
@@ -146,7 +182,7 @@ export default function Layout() {
             gridTemplateColumns: `repeat(${navItems.length}, minmax(0, 1fr))`,
             gap: '0.45rem',
             padding: '0.75rem 1rem calc(0.85rem + env(safe-area-inset-bottom))',
-            background: 'rgba(255, 251, 245, 0.92)',
+            background: 'var(--mobile-nav-bg)',
             backdropFilter: 'blur(18px)',
             borderTop: '1px solid var(--border)',
           }}
@@ -187,10 +223,10 @@ export default function Layout() {
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       <aside
         style={{
-          width: 'var(--sidebar-width)',
+          width: `${sidebarWidth}px`,
           position: 'fixed',
           inset: 0,
-          padding: '1.5rem',
+          padding: isSidebarCollapsed ? '1.2rem 0.7rem' : '1.5rem',
           background: 'linear-gradient(180deg, #181a20 0%, #12141a 100%)',
           color: '#f7f1e7',
           display: 'flex',
@@ -198,38 +234,54 @@ export default function Layout() {
           gap: '1.35rem',
           borderRight: '1px solid rgba(255, 255, 255, 0.08)',
           zIndex: 30,
+          transition: 'width 0.22s ease, padding 0.22s ease',
+          overflow: 'hidden',
         }}
       >
-        <BrandLockup />
+        <BrandLockup collapsed={isSidebarCollapsed} />
 
-        <div
-          style={{
-            padding: '1.1rem',
-            borderRadius: '18px',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            background: 'rgba(255, 255, 255, 0.04)',
-          }}
-        >
-          <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.68rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255, 255, 255, 0.52)' }}>
-            Public page
+        {!isSidebarCollapsed ? (
+          <div
+            style={{
+              padding: '1.1rem',
+              borderRadius: '18px',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              background: 'rgba(255, 255, 255, 0.04)',
+            }}
+          >
+            <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.68rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255, 255, 255, 0.52)' }}>
+              Public page
+            </div>
+            <div style={{ marginTop: '0.7rem', fontFamily: 'Syne, DM Sans, sans-serif', fontSize: '1.05rem', fontWeight: 700, letterSpacing: '-0.04em' }}>
+              Rajendra Dhaka
+            </div>
+            <p style={{ marginTop: '0.55rem', color: 'rgba(255, 255, 255, 0.66)', lineHeight: 1.6, fontSize: '0.92rem' }}>
+              The same event types you edit here show up on the public booking page.
+            </p>
+            <a
+              href={publicPagePath}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-light"
+              style={{ width: '100%', marginTop: '1rem', justifyContent: 'space-between' }}
+            >
+              Open public page
+              <Globe size={16} />
+            </a>
           </div>
-          <div style={{ marginTop: '0.7rem', fontFamily: 'Syne, DM Sans, sans-serif', fontSize: '1.05rem', fontWeight: 700, letterSpacing: '-0.04em' }}>
-            Rajendra Dhaka
-          </div>
-          <p style={{ marginTop: '0.55rem', color: 'rgba(255, 255, 255, 0.66)', lineHeight: 1.6, fontSize: '0.92rem' }}>
-            The same event types you edit here show up on the public booking page.
-          </p>
+        ) : (
           <a
             href={publicPagePath}
             target="_blank"
             rel="noopener noreferrer"
             className="btn btn-light"
-            style={{ width: '100%', marginTop: '1rem', justifyContent: 'space-between' }}
+            aria-label="Open public booking page"
+            title="Open public page"
+            style={{ width: '100%', minHeight: '42px', padding: 0 }}
           >
-            Open public page
             <Globe size={16} />
           </a>
-        </div>
+        )}
 
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
           {navItems.map((item, index) => {
@@ -239,26 +291,34 @@ export default function Layout() {
               <Link
                 key={item.path}
                 to={item.path}
+                title={item.name}
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: '32px minmax(0, 1fr) 18px',
+                  gridTemplateColumns: isSidebarCollapsed ? '1fr' : '32px minmax(0, 1fr) 18px',
                   alignItems: 'center',
                   gap: '0.75rem',
-                  padding: '0.85rem 0.95rem',
+                  padding: isSidebarCollapsed ? '0.78rem 0.55rem' : '0.85rem 0.95rem',
                   borderRadius: '16px',
                   border: `1px solid ${isActive ? 'rgba(255, 255, 255, 0.14)' : 'transparent'}`,
                   background: isActive ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
                   color: isActive ? '#fff' : 'rgba(255, 255, 255, 0.72)',
+                  justifyItems: isSidebarCollapsed ? 'center' : 'stretch',
                 }}
               >
-                <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.76rem', color: 'rgba(255, 255, 255, 0.5)' }}>
-                  0{index + 1}
-                </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', fontWeight: 700 }}>
-                  <item.icon size={17} />
-                  {item.name}
-                </span>
-                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: isActive ? 'var(--accent)' : 'rgba(255, 255, 255, 0.18)' }} />
+                {isSidebarCollapsed ? (
+                  <item.icon size={18} />
+                ) : (
+                  <>
+                    <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.76rem', color: 'rgba(255, 255, 255, 0.5)' }}>
+                      0{index + 1}
+                    </span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', fontWeight: 700 }}>
+                      <item.icon size={17} />
+                      {item.name}
+                    </span>
+                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: isActive ? 'var(--accent)' : 'rgba(255, 255, 255, 0.18)' }} />
+                  </>
+                )}
               </Link>
             );
           })}
@@ -290,22 +350,24 @@ export default function Layout() {
             >
               R
             </div>
-            <div>
-              <div style={{ fontWeight: 700 }}>Rajendra Dhaka</div>
-              <div style={{ color: 'rgba(255, 255, 255, 0.56)', fontSize: '0.84rem' }}>Workspace owner</div>
-            </div>
+            {!isSidebarCollapsed && (
+              <div>
+                <div style={{ fontWeight: 700 }}>Rajendra Dhaka</div>
+                <div style={{ color: 'rgba(255, 255, 255, 0.56)', fontSize: '0.84rem' }}>Workspace owner</div>
+              </div>
+            )}
           </div>
         </div>
       </aside>
 
-      <div style={{ flex: 1, marginLeft: 'var(--sidebar-width)', padding: '1.4rem 1.65rem 2rem' }}>
+      <div style={{ flex: 1, marginLeft: `${sidebarWidth}px`, padding: '1.4rem 1.65rem 2rem', transition: 'margin-left 0.22s ease' }}>
         <header
           style={{
             position: 'sticky',
             top: 0,
             zIndex: 20,
             paddingBottom: '1rem',
-            background: 'rgba(250, 246, 238, 0.88)',
+            background: 'var(--header-glass-bg)',
             backdropFilter: 'blur(18px)',
           }}
         >
@@ -332,6 +394,24 @@ export default function Layout() {
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexShrink: 0 }}>
+              <button
+                className="btn btn-outline"
+                onClick={() => setIsSidebarCollapsed((value) => !value)}
+                style={{ width: '44px', minHeight: '44px', padding: 0 }}
+                aria-label={sidebarToggleLabel}
+                title={sidebarToggleLabel}
+              >
+                <SidebarToggleIcon size={18} />
+              </button>
+              <button
+                className="btn btn-outline"
+                onClick={onToggleTheme}
+                style={{ width: '44px', minHeight: '44px', padding: 0 }}
+                aria-label={nextThemeLabel}
+                title={nextThemeLabel}
+              >
+                <ThemeIcon size={18} />
+              </button>
               <a href={publicPagePath} target="_blank" rel="noopener noreferrer" className="btn btn-outline" style={{ gap: '0.45rem' }}>
                 <Globe size={16} />
                 Public page

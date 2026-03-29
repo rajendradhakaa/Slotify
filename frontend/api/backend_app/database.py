@@ -1,9 +1,30 @@
 import os
+from pathlib import Path
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from dotenv import load_dotenv
 
-load_dotenv()
+
+def load_environment() -> None:
+    """Load environment variables from predictable locations."""
+    current_file = Path(__file__).resolve()
+    api_root = current_file.parents[1]
+    frontend_root = current_file.parents[2]
+    workspace_root = current_file.parents[3]
+
+    candidate_files = [
+        api_root / ".env",
+        frontend_root / ".env",
+        workspace_root / "backend" / ".env",
+        workspace_root / ".env",
+    ]
+
+    for env_file in candidate_files:
+        if env_file.exists():
+            load_dotenv(dotenv_path=env_file, override=False)
+
+
+load_environment()
 
 
 def is_placeholder_database_url(url):

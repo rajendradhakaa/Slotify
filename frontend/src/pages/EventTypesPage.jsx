@@ -250,7 +250,7 @@ export default function EventTypesPage() {
             style={{
               padding: isCompact ? '1.2rem' : '1.35rem',
               borderColor: event.is_active ? `${event.color}2e` : 'var(--border)',
-              background: event.is_active ? 'rgba(255, 255, 255, 0.95)' : 'rgba(255, 255, 255, 0.74)',
+              background: event.is_active ? 'var(--bg-content)' : 'var(--surface-muted)',
             }}
           >
             <div
@@ -327,7 +327,7 @@ export default function EventTypesPage() {
                 gap: '0.65rem',
                 marginTop: '1rem',
                 paddingTop: '1rem',
-                borderTop: '1px solid rgba(22, 37, 79, 0.08)',
+                borderTop: '1px solid var(--border)',
               }}
             >
               <button

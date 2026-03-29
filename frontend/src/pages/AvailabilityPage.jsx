@@ -257,8 +257,8 @@ export default function AvailabilityPage() {
                 className="section-card"
                 style={{
                   padding: '1.1rem',
-                  background: rule.is_active ? 'rgba(255, 255, 255, 0.92)' : 'rgba(244, 246, 252, 0.9)',
-                  borderColor: rule.is_active ? 'rgba(20, 87, 255, 0.12)' : 'rgba(22, 37, 79, 0.08)',
+                  background: rule.is_active ? 'var(--bg-content)' : 'var(--surface-muted)',
+                  borderColor: rule.is_active ? `var(--primary-ring)` : 'var(--border)',
                 }}
               >
                 <div
