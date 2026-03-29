@@ -5,6 +5,7 @@ from typing import Optional
 import os
 import smtplib
 from email.message import EmailMessage
+from email.utils import formatdate, make_msgid
 from .. import crud, schemas
 from ..database import get_db
 
@@ -46,22 +47,48 @@ def get_smtp_settings() -> dict:
 
 def send_with_smtp(message: EmailMessage, smtp: dict) -> None:
     host = smtp["host"]
-    port = smtp["port"]
     user = smtp["user"]
     password = smtp["password"]
 
+    attempts = []
     if smtp["use_tls"]:
-        with smtplib.SMTP(host, port, timeout=20) as server:
-            server.ehlo()
-            server.starttls()
-            server.ehlo()
-            server.login(user, password)
-            server.send_message(message)
-        return
+        attempts = [("tls", smtp["port"]), ("ssl", 465)]
+    else:
+        attempts = [("ssl", smtp["port"]), ("tls", 587)]
 
-    with smtplib.SMTP_SSL(host, port, timeout=20) as server:
-        server.login(user, password)
-        server.send_message(message)
+    last_error = None
+    for mode, port in attempts:
+        try:
+            if mode == "tls":
+                with smtplib.SMTP(host, port, timeout=20) as server:
+                    server.ehlo()
+                    server.starttls()
+                    server.ehlo()
+                    server.login(user, password)
+                    server.send_message(message)
+                return
+
+            with smtplib.SMTP_SSL(host, port, timeout=20) as server:
+                server.login(user, password)
+                server.send_message(message)
+            return
+        except Exception as error:
+            last_error = error
+
+    raise last_error if last_error else RuntimeError("SMTP send failed")
+
+
+def deliver_with_retry(message: EmailMessage, smtp: dict, label: str) -> None:
+    last_error = None
+    for attempt in range(2):
+        try:
+            send_with_smtp(message, smtp)
+            return
+        except Exception as error:
+            last_error = error
+            print(f"Email attempt {attempt + 1} failed for {label}: {error}")
+
+    raise last_error if last_error else RuntimeError(f"Email delivery failed for {label}")
 
 
 def send_confirmation_email(
@@ -87,6 +114,9 @@ def send_confirmation_email(
     msg_invitee['From'] = f"Rajendra Dhaka <{sender_email}>"
     msg_invitee['To'] = invitee_email
     msg_invitee['Bcc'] = sender_email
+    msg_invitee['Reply-To'] = sender_email
+    msg_invitee['Date'] = formatdate(localtime=True)
+    msg_invitee['Message-ID'] = make_msgid(domain=sender_email.split('@')[-1])
 
     formatted_start = start_time.strftime("%A, %B %d, %Y at %I:%M %p")
     formatted_end = end_time.strftime("%I:%M %p")
@@ -116,6 +146,9 @@ Rajendra Dhaka
     msg_host['Subject'] = f"New Booking Scheduled: {event_name}"
     msg_host['From'] = f"Slotify <{sender_email}>"
     msg_host['To'] = sender_email  # Send back to host
+    msg_host['Reply-To'] = sender_email
+    msg_host['Date'] = formatdate(localtime=True)
+    msg_host['Message-ID'] = make_msgid(domain=sender_email.split('@')[-1])
 
     content_host = f"""Hello Rajendra,
 
@@ -132,8 +165,8 @@ Please review this meeting in your Slotify dashboard.
     msg_host.set_content(content_host)
 
     try:
-        send_with_smtp(msg_invitee, smtp)
-        send_with_smtp(msg_host, smtp)
+        deliver_with_retry(msg_invitee, smtp, f"invitee:{invitee_email}")
+        deliver_with_retry(msg_host, smtp, f"host:{sender_email}")
         print(f"Confirmation emails sent to {invitee_email} and {sender_email}")
     except Exception as e:
         print(f"Failed to send emails: {e}")
