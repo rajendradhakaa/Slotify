@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from typing import Optional
@@ -182,7 +182,7 @@ Slotify Team
 
 
 @router.post("", response_model=schemas.BookingResponse, status_code=201)
-def create_booking(data: schemas.BookingCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+def create_booking(data: schemas.BookingCreate, db: Session = Depends(get_db)):
 
     # Validate event type exists
     event_type = crud.get_event_type(db, data.event_type_id)
@@ -217,16 +217,19 @@ def create_booking(data: schemas.BookingCreate, background_tasks: BackgroundTask
     if isinstance(booking, dict) and "error" in booking:
         raise HTTPException(status_code=400, detail=booking["error"])
 
-    # Trigger email to invitee in the background
-    background_tasks.add_task(
-        send_confirmation_email,
-        invitee_email=booking.invitee_email,
-        invitee_name=booking.invitee_name,
-        event_name=event_type.name,
-        event_slug=event_type.slug,
-        start_time=booking.start_time,
-        end_time=booking.end_time
-    )
+    # Send email synchronously for better reliability on serverless runtimes.
+    # Booking success should not depend on SMTP availability.
+    try:
+        send_confirmation_email(
+            invitee_email=booking.invitee_email,
+            invitee_name=booking.invitee_name,
+            event_name=event_type.name,
+            event_slug=event_type.slug,
+            start_time=booking.start_time,
+            end_time=booking.end_time,
+        )
+    except Exception as error:
+        print(f"Failed to send confirmation email for booking {booking.id}: {error}")
 
     return schemas.BookingResponse(
         id=booking.id,
