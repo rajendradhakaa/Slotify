@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Clock, Globe, ChevronLeft, ChevronRight, CheckCircle, CalendarPlus } from 'lucide-react';
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, isSameDay, isSameMonth, addDays, isBefore, startOfDay } from 'date-fns';
-import { eventTypesApi, availabilityApi, bookingsApi } from '../api';
+import { eventTypesApi, availabilityApi, bookingsApi, getApiErrorMessage } from '../api';
 import useMediaQuery from '../hooks/useMediaQuery';
 
 export default function BookingPage() {
@@ -129,7 +129,7 @@ export default function BookingPage() {
       setBookingStatus('success');
     } catch (error) {
       setBookingStatus('error');
-      alert(error.response?.data?.detail || 'This time slot is no longer available. Please select another time.');
+      alert(getApiErrorMessage(error, 'This time slot is no longer available. Please select another time.'));
       setSelectedTimeSlot(null);
       setSelectedDate((currentDateValue) =>
         currentDateValue ? new Date(currentDateValue) : currentDateValue

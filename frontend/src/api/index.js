@@ -1,11 +1,32 @@
 import axios from 'axios';
 
+const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
+const apiBaseUrl = !configuredApiBaseUrl || configuredApiBaseUrl === 'https://api.slotify.com'
+  ? '/api'
+  : configuredApiBaseUrl;
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
+  baseURL: apiBaseUrl,
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
+export function getApiErrorMessage(error, fallbackMessage) {
+  if (error.response?.data?.detail) {
+    return error.response.data.detail;
+  }
+
+  if (error.response?.data?.message) {
+    return error.response.data.message;
+  }
+
+  if (error.code === 'ERR_NETWORK') {
+    return 'The API is unreachable right now. Please try again in a moment.';
+  }
+
+  return fallbackMessage;
+}
 
 export const eventTypesApi = {
   getAll: () => api.get('/event-types').then(res => res.data),

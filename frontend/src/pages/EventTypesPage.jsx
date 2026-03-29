@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Copy, Plus, Trash2, Edit2, Link as LinkIcon, ExternalLink, HelpCircle, Search } from 'lucide-react';
-import { eventTypesApi } from '../api';
+import { eventTypesApi, getApiErrorMessage } from '../api';
 import useMediaQuery from '../hooks/useMediaQuery';
 
 export default function EventTypesPage() {
@@ -40,7 +40,7 @@ export default function EventTypesPage() {
       setEditingId(null);
       fetchEventTypes();
     } catch (error) {
-      alert(error.response?.data?.detail || 'Error saving event type');
+      alert(getApiErrorMessage(error, 'Error saving event type'));
     }
   };
 
