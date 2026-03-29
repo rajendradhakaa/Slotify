@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, ChevronRight, Clock, Globe, Sparkles } from 'lucide-react';
+import { Calendar, ChevronRight, Clock, Globe } from 'lucide-react';
 import { eventTypesApi } from '../api';
 import useMediaQuery from '../hooks/useMediaQuery';
 
@@ -45,12 +45,12 @@ export default function PublicProfilePage() {
       <div style={{ maxWidth: '1040px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
         <section className="page-hero">
           <div className="eyebrow">
-            <Sparkles size={14} />
+            <Globe size={14} />
             Rajendra Dhaka
           </div>
-          <h1 className="hero-title" style={{ maxWidth: '740px' }}>Choose the session that matches what you need</h1>
+          <h1 className="hero-title" style={{ maxWidth: '740px' }}>Book time with Rajendra Dhaka</h1>
           <p className="hero-copy" style={{ maxWidth: '700px' }}>
-            Pick an event below to book time for strategy, reviews, or focused working sessions. Each option is built to keep the conversation crisp.
+            Pick the kind of conversation you need. Each option below opens a live calendar with the times that are actually available.
           </p>
           <div className="action-row" style={{ marginTop: '1.25rem' }}>
             <span className="status-chip" style={{ background: 'rgba(255, 255, 255, 0.16)', color: 'white' }}>
@@ -67,11 +67,11 @@ export default function PublicProfilePage() {
         <section className="section-card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div className="toolbar-row">
             <div>
-              <h2 style={{ fontFamily: 'Manrope, Inter, sans-serif', fontSize: '1.45rem', fontWeight: 800, letterSpacing: '-0.04em' }}>
-                Available bookings
+              <h2 style={{ fontFamily: 'Syne, DM Sans, sans-serif', fontSize: '1.45rem', fontWeight: 800, letterSpacing: '-0.04em' }}>
+                Available sessions
               </h2>
               <p className="helper-copy" style={{ marginTop: '0.3rem' }}>
-                Every live event below opens the booking calendar immediately.
+                Every live option below opens the booking calendar right away.
               </p>
             </div>
             <span className="status-chip success">{publicEvents.length} live options</span>
@@ -109,7 +109,7 @@ export default function PublicProfilePage() {
                   <h3
                     style={{
                       marginTop: '1rem',
-                      fontFamily: 'Manrope, Inter, sans-serif',
+                      fontFamily: 'Syne, DM Sans, sans-serif',
                       fontSize: '1.28rem',
                       fontWeight: 800,
                       letterSpacing: '-0.03em',
@@ -149,7 +149,7 @@ export default function PublicProfilePage() {
 
           {publicEvents.length === 0 ? (
             <div className="empty-state">
-              <h3 style={{ fontFamily: 'Manrope, Inter, sans-serif', fontSize: '1.3rem', fontWeight: 800, letterSpacing: '-0.03em' }}>
+              <h3 style={{ fontFamily: 'Syne, DM Sans, sans-serif', fontSize: '1.3rem', fontWeight: 800, letterSpacing: '-0.03em' }}>
                 No public event types are live right now
               </h3>
               <p className="helper-copy" style={{ maxWidth: '480px', margin: '0.75rem auto 0' }}>

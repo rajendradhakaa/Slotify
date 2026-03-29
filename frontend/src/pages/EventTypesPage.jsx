@@ -9,7 +9,6 @@ import {
   Palette,
   Plus,
   Search,
-  Sparkles,
   Trash2,
 } from 'lucide-react';
 import { eventTypesApi, getApiErrorMessage } from '../api';
@@ -230,13 +229,13 @@ export default function EventTypesPage() {
           >
             <LinkIcon size={28} color="var(--primary)" />
           </div>
-          <h3 style={{ fontFamily: 'Manrope, Inter, sans-serif', fontSize: '1.35rem', fontWeight: 800, letterSpacing: '-0.03em' }}>
+          <h3 style={{ fontFamily: 'Syne, DM Sans, sans-serif', fontSize: '1.35rem', fontWeight: 800, letterSpacing: '-0.03em' }}>
             {searchValue ? 'Nothing matches that search yet' : 'Create your first event type'}
           </h3>
           <p className="helper-copy" style={{ maxWidth: '460px', margin: '0.75rem auto 0' }}>
             {searchValue
               ? 'Try a different keyword or clear the filter to see all booking options.'
-              : 'Set up one polished session type and your public profile instantly becomes bookable.'}
+              : 'Start with one clear session type, then expand only if people actually need more.'}
           </p>
         </div>
       );
@@ -266,7 +265,7 @@ export default function EventTypesPage() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
                   <div style={{ width: '14px', height: '14px', borderRadius: '50%', background: event.color, boxShadow: `0 0 0 6px ${event.color}18` }} />
                   <span className={`status-chip ${event.is_active ? 'success' : 'muted'}`}>
-                    {event.is_active ? 'Live on public page' : 'Hidden from public page'}
+                    {event.is_active ? 'Visible on public page' : 'Hidden from public page'}
                   </span>
                   <span className="status-chip muted">/{event.slug}</span>
                 </div>
@@ -274,7 +273,7 @@ export default function EventTypesPage() {
                 <h3
                   style={{
                     marginTop: '1rem',
-                    fontFamily: 'Manrope, Inter, sans-serif',
+                    fontFamily: 'Syne, DM Sans, sans-serif',
                     fontSize: isCompact ? '1.25rem' : '1.35rem',
                     fontWeight: 800,
                     letterSpacing: '-0.03em',
@@ -359,19 +358,19 @@ export default function EventTypesPage() {
     <div className="dashboard-page">
       {feedback ? (
         <div className={`toast-banner ${feedback.type === 'error' ? 'error' : ''}`}>
-          <Sparkles size={16} />
+          <LinkIcon size={16} />
           {feedback.message}
         </div>
       ) : null}
 
       <section className="page-hero">
         <div className="eyebrow">
-          <Sparkles size={14} />
-          Booking experience
+          <LinkIcon size={14} />
+          Scheduling links
         </div>
-        <h1 className="hero-title">Design event types people want to book</h1>
+        <h1 className="hero-title">Build a booking menu that feels deliberate</h1>
         <p className="hero-copy">
-          Turn one generic link into a cleaner menu of focused sessions with strong names, clear durations, and polished public previews.
+          A good scheduling page stays small and clear. Name each session well, then make it easy to share.
         </p>
         <div className="action-row">
           <button type="button" className="btn btn-light" onClick={() => openCreateForm()}>
@@ -408,11 +407,11 @@ export default function EventTypesPage() {
         <section className="section-card" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           <div className="toolbar-row">
             <div>
-              <h2 style={{ fontFamily: 'Manrope, Inter, sans-serif', fontSize: '1.45rem', fontWeight: 800, letterSpacing: '-0.04em' }}>
-                Event catalog
+              <h2 style={{ fontFamily: 'Syne, DM Sans, sans-serif', fontSize: '1.45rem', fontWeight: 800, letterSpacing: '-0.04em' }}>
+                Current event types
               </h2>
               <p className="helper-copy" style={{ marginTop: '0.35rem' }}>
-                Search, tweak, preview, and share each booking option from one place.
+                Search, adjust, preview, or hide each link without leaving the page.
               </p>
             </div>
 
@@ -442,11 +441,11 @@ export default function EventTypesPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'flex-start' }}>
               <div>
                 <span className="status-chip success">Public profile</span>
-                <h2 style={{ marginTop: '1rem', fontFamily: 'Manrope, Inter, sans-serif', fontSize: '1.35rem', fontWeight: 800, letterSpacing: '-0.04em' }}>
-                  Share one polished link
+                <h2 style={{ marginTop: '1rem', fontFamily: 'Syne, DM Sans, sans-serif', fontSize: '1.35rem', fontWeight: 800, letterSpacing: '-0.04em' }}>
+                  One page to share
                 </h2>
                 <p className="helper-copy" style={{ marginTop: '0.45rem' }}>
-                  Keep your public page tidy and only surface the event types that should be bookable right now.
+                  Keep the public page focused. People should only see the sessions that are ready to book.
                 </p>
               </div>
               <a href={publicProfileUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)' }}>
@@ -488,8 +487,8 @@ export default function EventTypesPage() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
               <div>
                 <span className="status-chip warning">{editingId ? 'Editing' : 'Builder'}</span>
-                <h2 style={{ marginTop: '0.9rem', fontFamily: 'Manrope, Inter, sans-serif', fontSize: '1.3rem', fontWeight: 800, letterSpacing: '-0.04em' }}>
-                  {showForm ? (editingId ? 'Refine event type' : 'Create a new event type') : 'Start from a strong template'}
+                <h2 style={{ marginTop: '0.9rem', fontFamily: 'Syne, DM Sans, sans-serif', fontSize: '1.3rem', fontWeight: 800, letterSpacing: '-0.04em' }}>
+                  {showForm ? (editingId ? 'Edit event type' : 'Create event type') : 'Start from a useful shape'}
                 </h2>
               </div>
               {showForm ? (
@@ -511,7 +510,7 @@ export default function EventTypesPage() {
                     placeholder="e.g. Strategy session"
                     required
                   />
-                  <p className="field-hint">Lead with the outcome, not just the duration.</p>
+                  <p className="field-hint">Use a name that explains why someone would book it.</p>
                 </div>
 
                 <div className="input-grid">
@@ -625,7 +624,7 @@ export default function EventTypesPage() {
                     <div style={{ width: '14px', height: '14px', borderRadius: '50%', background: formData.color }} />
                     <strong>Preview</strong>
                   </div>
-                  <div style={{ marginTop: '0.8rem', fontFamily: 'Manrope, Inter, sans-serif', fontSize: '1.1rem', fontWeight: 800, letterSpacing: '-0.03em' }}>
+                  <div style={{ marginTop: '0.8rem', fontFamily: 'Syne, DM Sans, sans-serif', fontSize: '1.1rem', fontWeight: 800, letterSpacing: '-0.03em' }}>
                     {formData.name || 'Your event type name'}
                   </div>
                   <p className="helper-copy" style={{ marginTop: '0.35rem' }}>
@@ -661,7 +660,7 @@ export default function EventTypesPage() {
                   >
                     <div>
                       <div style={{ fontWeight: 800 }}>{template.name}</div>
-                      <div className="helper-copy" style={{ marginTop: '0.2rem' }}>{template.duration} minute booking flow</div>
+                      <div className="helper-copy" style={{ marginTop: '0.2rem' }}>{template.duration} minute session</div>
                     </div>
                     <ExternalLink size={16} color="var(--text-secondary)" />
                   </button>

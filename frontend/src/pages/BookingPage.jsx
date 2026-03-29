@@ -8,7 +8,6 @@ import {
   ChevronRight,
   Clock,
   Globe,
-  Sparkles,
 } from 'lucide-react';
 import {
   addDays,
@@ -293,7 +292,7 @@ export default function BookingPage() {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
         <div className="section-card empty-state" style={{ maxWidth: '540px' }}>
-          <h2 style={{ fontFamily: 'Manrope, Inter, sans-serif', fontSize: '1.45rem', fontWeight: 800, letterSpacing: '-0.03em' }}>
+          <h2 style={{ fontFamily: 'Syne, DM Sans, sans-serif', fontSize: '1.45rem', fontWeight: 800, letterSpacing: '-0.03em' }}>
             {error || 'Booking link not found'}
           </h2>
           <p className="helper-copy" style={{ marginTop: '0.75rem' }}>
@@ -309,7 +308,7 @@ export default function BookingPage() {
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: isCompact ? '1rem' : '2rem' }}>
         <div className="section-card" style={{ width: '100%', maxWidth: '680px', textAlign: 'center', padding: isNarrow ? '1.5rem' : '2.3rem' }}>
           <CheckCircle size={70} color="var(--success)" style={{ margin: '0 auto 1.25rem' }} />
-          <h1 style={{ fontFamily: 'Manrope, Inter, sans-serif', fontSize: isNarrow ? '1.7rem' : '2rem', fontWeight: 800, letterSpacing: '-0.04em' }}>
+          <h1 style={{ fontFamily: 'Syne, DM Sans, sans-serif', fontSize: isNarrow ? '1.7rem' : '2rem', fontWeight: 800, letterSpacing: '-0.04em' }}>
             You are booked
           </h1>
           <p className="helper-copy" style={{ marginTop: '0.7rem', maxWidth: '520px', marginInline: 'auto' }}>
@@ -327,7 +326,7 @@ export default function BookingPage() {
             }}
           >
             <div className="status-chip success">Confirmed</div>
-            <h2 style={{ marginTop: '0.9rem', fontFamily: 'Manrope, Inter, sans-serif', fontSize: '1.3rem', fontWeight: 800, letterSpacing: '-0.03em' }}>
+            <h2 style={{ marginTop: '0.9rem', fontFamily: 'Syne, DM Sans, sans-serif', fontSize: '1.3rem', fontWeight: 800, letterSpacing: '-0.03em' }}>
               {eventType.name}
             </h2>
             <div style={{ display: 'grid', gap: '0.75rem', marginTop: '1rem' }}>
@@ -391,7 +390,7 @@ export default function BookingPage() {
               alignItems: 'center',
               justifyContent: 'center',
               color: 'white',
-              fontFamily: 'Manrope, Inter, sans-serif',
+              fontFamily: 'Syne, DM Sans, sans-serif',
               fontWeight: 800,
               fontSize: '1.2rem',
               boxShadow: '0 16px 30px rgba(20, 87, 255, 0.2)',
@@ -401,15 +400,15 @@ export default function BookingPage() {
           </div>
 
           <div className="status-chip" style={{ marginTop: '1rem' }}>
-            <Sparkles size={14} />
-            Live booking page
+            <Globe size={14} />
+            Public booking page
           </div>
           <div style={{ marginTop: '1.1rem', color: 'var(--text-secondary)', fontWeight: 700 }}>Rajendra Dhaka</div>
-          <h1 style={{ marginTop: '0.35rem', fontFamily: 'Manrope, Inter, sans-serif', fontSize: isNarrow ? '1.6rem' : '1.95rem', fontWeight: 800, letterSpacing: '-0.04em' }}>
+          <h1 style={{ marginTop: '0.35rem', fontFamily: 'Syne, DM Sans, sans-serif', fontSize: isNarrow ? '1.6rem' : '1.95rem', fontWeight: 800, letterSpacing: '-0.04em' }}>
             {eventType.name}
           </h1>
           <p className="helper-copy" style={{ marginTop: '0.75rem' }}>
-            Choose a date, pick a real available slot, then confirm the booking with your details.
+            Pick a day, choose one of the open slots, then confirm the details once.
           </p>
 
           <div style={{ display: 'grid', gap: '0.8rem', marginTop: '1.4rem' }}>
@@ -424,7 +423,7 @@ export default function BookingPage() {
           </div>
 
           <div style={{ marginTop: '1.5rem', padding: '1rem', borderRadius: '22px', background: 'rgba(20, 87, 255, 0.06)', border: '1px solid rgba(20, 87, 255, 0.12)' }}>
-            <div style={{ fontWeight: 700 }}>Your progress</div>
+            <div style={{ fontWeight: 700 }}>Booking steps</div>
             <div className="stat-line">
               <span>Date selected</span>
               <strong>{selectedDate ? 'Done' : 'Choose one'}</strong>
@@ -471,8 +470,8 @@ export default function BookingPage() {
           {bookingResult ? (
             <div className="toast-banner" style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <Sparkles size={16} />
-                Need your last receipt? Your previous booking is still stored in this browser tab.
+                <Calendar size={16} />
+                Need the last confirmation again? This browser tab still has it.
               </div>
               <button type="button" className="btn btn-outline" onClick={() => setBookingStatus('success')} style={{ minHeight: '40px' }}>
                 View receipt
@@ -481,15 +480,15 @@ export default function BookingPage() {
           ) : null}
 
           <section className="section-card" style={{ padding: '1.2rem' }}>
-            <div className="toolbar-row" style={{ alignItems: 'center' }}>
-              <div>
-                <h2 style={{ fontFamily: 'Manrope, Inter, sans-serif', fontSize: '1.4rem', fontWeight: 800, letterSpacing: '-0.04em' }}>
-                  Choose a date
-                </h2>
-                <p className="helper-copy" style={{ marginTop: '0.3rem' }}>
-                  Start with a day, then pick from the real available slots for that date.
-                </p>
-              </div>
+              <div className="toolbar-row" style={{ alignItems: 'center' }}>
+                <div>
+                  <h2 style={{ fontFamily: 'Syne, DM Sans, sans-serif', fontSize: '1.4rem', fontWeight: 800, letterSpacing: '-0.04em' }}>
+                  Pick a day
+                  </h2>
+                  <p className="helper-copy" style={{ marginTop: '0.3rem' }}>
+                  The times on the right update from live availability for the date you choose.
+                  </p>
+                </div>
               <div className="status-chip muted">{selectedDate ? formatShortDate(selectedDate) : 'Step 1'}</div>
             </div>
 
@@ -506,7 +505,7 @@ export default function BookingPage() {
                   <button type="button" className="btn btn-outline" onClick={() => setCurrentDate(subMonths(currentDate, 1))} style={{ minWidth: '46px', paddingInline: '0.8rem' }}>
                     <ChevronLeft size={18} />
                   </button>
-                  <div style={{ fontFamily: 'Manrope, Inter, sans-serif', fontSize: isNarrow ? '1.05rem' : '1.15rem', fontWeight: 800, letterSpacing: '-0.03em' }}>
+                  <div style={{ fontFamily: 'Syne, DM Sans, sans-serif', fontSize: isNarrow ? '1.05rem' : '1.15rem', fontWeight: 800, letterSpacing: '-0.03em' }}>
                     {format(currentDate, 'MMMM yyyy')}
                   </div>
                   <button type="button" className="btn btn-outline" onClick={() => setCurrentDate(addMonths(currentDate, 1))} style={{ minWidth: '46px', paddingInline: '0.8rem' }}>
@@ -519,13 +518,13 @@ export default function BookingPage() {
               <div style={{ padding: '1rem', borderRadius: '22px', background: 'var(--surface-muted)', border: '1px solid rgba(22, 37, 79, 0.08)', display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
                 <div>
                   <div className="status-chip">{selectedDate ? 'Step 2' : 'Select a date first'}</div>
-                  <h3 style={{ marginTop: '0.9rem', fontFamily: 'Manrope, Inter, sans-serif', fontSize: '1.2rem', fontWeight: 800, letterSpacing: '-0.03em' }}>
+                  <h3 style={{ marginTop: '0.9rem', fontFamily: 'Syne, DM Sans, sans-serif', fontSize: '1.2rem', fontWeight: 800, letterSpacing: '-0.03em' }}>
                     {selectedDate ? `Available on ${formatShortDate(selectedDate)}` : 'Choose a day to see times'}
                   </h3>
                   <p className="helper-copy" style={{ marginTop: '0.3rem' }}>
                     {selectedDate
                       ? `All times are shown in ${userTimezone}.`
-                      : 'Once a day is selected, bookable times appear here automatically.'}
+                      : 'Open times appear here as soon as a date is selected.'}
                   </p>
                 </div>
 
@@ -571,7 +570,7 @@ export default function BookingPage() {
               <div className="toolbar-row">
                 <div>
                   <div className="status-chip success">Step 3</div>
-                  <h2 style={{ marginTop: '0.85rem', fontFamily: 'Manrope, Inter, sans-serif', fontSize: '1.4rem', fontWeight: 800, letterSpacing: '-0.04em' }}>
+                  <h2 style={{ marginTop: '0.85rem', fontFamily: 'Syne, DM Sans, sans-serif', fontSize: '1.4rem', fontWeight: 800, letterSpacing: '-0.04em' }}>
                     Confirm your details
                   </h2>
                   <p className="helper-copy" style={{ marginTop: '0.3rem' }}>
@@ -601,7 +600,7 @@ export default function BookingPage() {
 
               {bookingError ? (
                 <div className="toast-banner error" style={{ marginTop: '1rem' }}>
-                  <Sparkles size={16} />
+                  <Clock size={16} />
                   {bookingError}
                 </div>
               ) : null}

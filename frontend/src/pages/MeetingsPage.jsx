@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Calendar, Clock, Mail, Search, Sparkles, XCircle } from 'lucide-react';
+import { Calendar, Clock, Mail, Search, XCircle } from 'lucide-react';
 import { differenceInMinutes, format, isToday, isTomorrow } from 'date-fns';
 import { bookingsApi, getApiErrorMessage } from '../api';
 import useMediaQuery from '../hooks/useMediaQuery';
@@ -117,7 +117,7 @@ export default function MeetingsPage() {
     <div className="dashboard-page">
       {feedback ? (
         <div className={`toast-banner ${feedback.type === 'error' ? 'error' : ''}`}>
-          <Sparkles size={16} />
+          <Calendar size={16} />
           {feedback.message}
         </div>
       ) : null}
@@ -125,11 +125,11 @@ export default function MeetingsPage() {
       <section className="page-hero">
         <div className="eyebrow">
           <Calendar size={14} />
-          Meetings
+          Meeting log
         </div>
-        <h1 className="hero-title">Keep your conversations organized after the booking</h1>
+        <h1 className="hero-title">See what is coming up and what already happened</h1>
         <p className="hero-copy">
-          Scan what is coming up, review the past, and take action on scheduled meetings without losing context.
+          A quieter view of your bookings, with just enough detail to act on the next thing quickly.
         </p>
       </section>
 
@@ -206,7 +206,7 @@ export default function MeetingsPage() {
             >
               <Calendar size={28} color="var(--primary)" />
             </div>
-            <h3 style={{ fontFamily: 'Manrope, Inter, sans-serif', fontSize: '1.35rem', fontWeight: 800, letterSpacing: '-0.03em' }}>
+            <h3 style={{ fontFamily: 'Syne, DM Sans, sans-serif', fontSize: '1.35rem', fontWeight: 800, letterSpacing: '-0.03em' }}>
               No {activeTab} meetings yet
             </h3>
             <p className="helper-copy" style={{ maxWidth: '460px', margin: '0.75rem auto 0' }}>
@@ -248,7 +248,7 @@ export default function MeetingsPage() {
                       <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                         {format(startDate, 'MMM')}
                       </div>
-                      <div style={{ fontFamily: 'Manrope, Inter, sans-serif', fontSize: '2.2rem', fontWeight: 800, lineHeight: 1 }}>
+                      <div style={{ fontFamily: 'Syne, DM Sans, sans-serif', fontSize: '2.2rem', fontWeight: 800, lineHeight: 1 }}>
                         {format(startDate, 'd')}
                       </div>
                       <div style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>{getDateLabel(startDate)}</div>
@@ -263,7 +263,7 @@ export default function MeetingsPage() {
                           <h3
                             style={{
                               marginTop: '0.9rem',
-                              fontFamily: 'Manrope, Inter, sans-serif',
+                              fontFamily: 'Syne, DM Sans, sans-serif',
                               fontSize: '1.3rem',
                               fontWeight: 800,
                               letterSpacing: '-0.03em',

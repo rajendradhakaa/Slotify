@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Clock, Copy, Sparkles, Wand2 } from 'lucide-react';
+import { Clock, Copy, Wand2 } from 'lucide-react';
 import { availabilityApi, getApiErrorMessage } from '../api';
 import useMediaQuery from '../hooks/useMediaQuery';
 
@@ -178,7 +178,7 @@ export default function AvailabilityPage() {
     <div className="dashboard-page">
       {feedback ? (
         <div className={`toast-banner ${feedback.type === 'error' ? 'error' : ''}`}>
-          <Sparkles size={16} />
+          <Clock size={16} />
           {feedback.message}
         </div>
       ) : null}
@@ -186,11 +186,11 @@ export default function AvailabilityPage() {
       <section className="page-hero">
         <div className="eyebrow">
           <Clock size={14} />
-          Weekly rhythm
+          Weekly hours
         </div>
-        <h1 className="hero-title">Keep your schedule bookable and believable</h1>
+        <h1 className="hero-title">Set hours that feel real on the calendar</h1>
         <p className="hero-copy">
-          Set dependable hours once, apply presets when you need speed, and save only when the week looks right.
+          This is the part people notice when they open your booking page. Keep it simple and honest.
         </p>
         <div className="action-row">
           <button type="button" className="btn btn-light" onClick={handleSave} disabled={saving || !hasChanges}>
@@ -221,7 +221,7 @@ export default function AvailabilityPage() {
       <section className="section-card" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
         <div className="toolbar-row">
           <div>
-            <h2 style={{ fontFamily: 'Manrope, Inter, sans-serif', fontSize: '1.45rem', fontWeight: 800, letterSpacing: '-0.04em' }}>
+            <h2 style={{ fontFamily: 'Syne, DM Sans, sans-serif', fontSize: '1.45rem', fontWeight: 800, letterSpacing: '-0.04em' }}>
               Weekly availability
             </h2>
             <p className="helper-copy" style={{ marginTop: '0.35rem' }}>
@@ -270,7 +270,7 @@ export default function AvailabilityPage() {
                   }}
                 >
                   <div>
-                    <div style={{ fontFamily: 'Manrope, Inter, sans-serif', fontSize: '1.05rem', fontWeight: 800 }}>{dayName}</div>
+                    <div style={{ fontFamily: 'Syne, DM Sans, sans-serif', fontSize: '1.05rem', fontWeight: 800 }}>{dayName}</div>
                     <div className={`status-chip ${rule.is_active ? 'success' : 'muted'}`} style={{ marginTop: '0.6rem' }}>
                       {rule.is_active ? 'Available' : 'Offline'}
                     </div>
