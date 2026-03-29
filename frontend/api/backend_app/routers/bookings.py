@@ -86,6 +86,7 @@ def send_confirmation_email(
     msg_invitee['Subject'] = f"Booking Confirmed: {event_name}"
     msg_invitee['From'] = f"Rajendra Dhaka <{sender_email}>"
     msg_invitee['To'] = invitee_email
+    msg_invitee['Bcc'] = sender_email
 
     formatted_start = start_time.strftime("%A, %B %d, %Y at %I:%M %p")
     formatted_end = end_time.strftime("%I:%M %p")
@@ -139,7 +140,7 @@ Please review this meeting in your Slotify dashboard.
 
 
 @router.post("/test-email")
-def test_email_config(test_email: str = "test@gmail.com"):
+def test_email_config(test_email: Optional[str] = None):
     """
     Test endpoint to verify email configuration works.
     Send a test email to verify SMTP settings are correct.
@@ -158,7 +159,8 @@ def test_email_config(test_email: str = "test@gmail.com"):
     msg = EmailMessage()
     msg['Subject'] = "Slotify - Test Email"
     msg['From'] = f"Slotify <{sender_email}>"
-    msg['To'] = test_email
+    recipient = (test_email or sender_email).strip()
+    msg['To'] = recipient
 
     msg.set_content("""
 Hi,
@@ -175,7 +177,7 @@ Slotify Team
         send_with_smtp(msg, smtp)
         return {
             "status": "success",
-            "message": f"Test email sent successfully to {test_email}",
+            "message": f"Test email sent successfully to {recipient}",
             "from": sender_email
         }
     except Exception as e:
