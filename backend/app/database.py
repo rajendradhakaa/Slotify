@@ -5,14 +5,31 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
+def is_placeholder_database_url(url):
+    if not url:
+        return False
+
+    placeholder_markers = (
+        "user:password@your-host",
+        "user:password@your-db-host",
+        "user:password@host",
+        "@your-host:",
+        "@your-db-host:",
+    )
+    return any(marker in url for marker in placeholder_markers)
+
+
 def get_database_url():
     configured_url = os.getenv("DATABASE_URL")
-    if configured_url:
+    if configured_url and not is_placeholder_database_url(configured_url):
         return configured_url
 
     # Vercel functions only allow temporary writes, so /tmp is the safest
     # fallback when a real production database has not been configured yet.
     if os.getenv("VERCEL"):
+        if configured_url:
+            print("Using fallback sqlite database because DATABASE_URL is still a placeholder.")
         return "sqlite:////tmp/slotify.db"
 
     return "sqlite:///./slotify_dev.db"
