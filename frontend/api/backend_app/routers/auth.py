@@ -2,6 +2,7 @@ import os
 import hashlib
 import hmac
 import secrets
+from typing import Optional
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, EmailStr
@@ -25,13 +26,13 @@ class LoginRequest(BaseModel):
     password: str
 
 
-def _hash_password(password: str, salt: str | None = None) -> str:
+def _hash_password(password: str, salt: Optional[str] = None) -> str:
     actual_salt = salt or secrets.token_hex(16)
     digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), actual_salt.encode("utf-8"), 120000)
     return f"{actual_salt}${digest.hex()}"
 
 
-def _verify_password(password: str, stored_value: str | None) -> bool:
+def _verify_password(password: str, stored_value: Optional[str]) -> bool:
     if not stored_value or "$" not in stored_value:
         return False
     salt, _ = stored_value.split("$", 1)
