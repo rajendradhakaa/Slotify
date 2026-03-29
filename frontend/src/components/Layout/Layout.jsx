@@ -111,6 +111,7 @@ export default function Layout({ theme = 'light', onToggleTheme }) {
   const sidebarWidth = isSidebarCollapsed ? sidebarCollapsedWidth : sidebarExpandedWidth;
   const SidebarToggleIcon = isSidebarCollapsed ? PanelLeftOpen : PanelLeftClose;
   const sidebarToggleLabel = isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar';
+  const sidebarTransition = 'width 0.28s cubic-bezier(0.2, 0.65, 0.3, 1), padding 0.28s cubic-bezier(0.2, 0.65, 0.3, 1)';
 
   if (isCompact) {
     return (
@@ -262,21 +263,43 @@ export default function Layout({ theme = 'light', onToggleTheme }) {
           gap: '1.35rem',
           borderRight: '1px solid rgba(255, 255, 255, 0.08)',
           zIndex: 30,
-          transition: 'width 0.22s ease, padding 0.22s ease',
+          transition: sidebarTransition,
           overflow: 'hidden',
         }}
       >
-        <button
-          className="sidebar-edge-toggle"
-          onClick={() => setIsSidebarCollapsed((value) => !value)}
-          style={{ top: isSidebarCollapsed ? '1rem' : '3.9rem' }}
-          aria-label={sidebarToggleLabel}
-          title={sidebarToggleLabel}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: isSidebarCollapsed ? 'center' : 'space-between',
+            gap: '0.7rem',
+            minHeight: '44px',
+          }}
         >
-          <SidebarToggleIcon size={16} />
-        </button>
+          <BrandLockup collapsed={isSidebarCollapsed} />
+          {!isSidebarCollapsed ? (
+            <button
+              className="sidebar-toggle-btn"
+              onClick={() => setIsSidebarCollapsed((value) => !value)}
+              aria-label={sidebarToggleLabel}
+              title={sidebarToggleLabel}
+            >
+              <SidebarToggleIcon size={16} />
+            </button>
+          ) : null}
+        </div>
 
-        <BrandLockup collapsed={isSidebarCollapsed} />
+        {isSidebarCollapsed ? (
+          <button
+            className="sidebar-toggle-btn"
+            onClick={() => setIsSidebarCollapsed((value) => !value)}
+            aria-label={sidebarToggleLabel}
+            title={sidebarToggleLabel}
+            style={{ alignSelf: 'center' }}
+          >
+            <SidebarToggleIcon size={16} />
+          </button>
+        ) : null}
 
         {!isSidebarCollapsed ? (
           <div
@@ -445,7 +468,7 @@ export default function Layout({ theme = 'light', onToggleTheme }) {
         </div>
       </aside>
 
-      <div style={{ flex: 1, marginLeft: `${sidebarWidth}px`, padding: '1.4rem 1.65rem 2rem', transition: 'margin-left 0.22s ease' }}>
+      <div style={{ flex: 1, marginLeft: `${sidebarWidth}px`, padding: '1.4rem 1.65rem 2rem', transition: 'margin-left 0.28s cubic-bezier(0.2, 0.65, 0.3, 1)' }}>
         <header
           style={{
             position: 'sticky',
