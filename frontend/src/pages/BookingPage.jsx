@@ -109,6 +109,7 @@ export default function BookingPage() {
     const storedBooking = sessionStorage.getItem(`booking_${slug}`);
     if (storedBooking) {
       setBookingResult(JSON.parse(storedBooking));
+      setBookingStatus('success');
     }
 
     return () => {

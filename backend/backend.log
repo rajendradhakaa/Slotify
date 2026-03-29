@@ -1,0 +1,2 @@
+./venv/bin/uvicorn: line 2: /Volumes/android 1/Calenly/backend/venv/bin/python3.12: No such file or directory
+./venv/bin/uvicorn: line 2: exec: /Volumes/android 1/Calenly/backend/venv/bin/python3.12: cannot execute: No such file or directory
