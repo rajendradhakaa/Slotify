@@ -278,21 +278,32 @@ export default function AvailabilityPage() {
 
                   {rule.is_active ? (
                     <div style={{ display: 'grid', gridTemplateColumns: isCompact ? '1fr' : 'minmax(0, 1fr) 44px minmax(0, 1fr)', gap: '0.75rem', alignItems: 'center' }}>
-                      <input
-                        type="time"
-                        className="form-input"
-                        value={rule.start_time}
-                        onChange={(e) => handleTimeChange(rule.day_of_week, 'start_time', e.target.value)}
-                      />
-                      <span style={{ textAlign: 'center', color: 'var(--text-secondary)', fontWeight: 700 }}>to</span>
-                      <input
-                        type="time"
-                        className="form-input"
-                        value={rule.end_time}
-                        onChange={(e) => handleTimeChange(rule.day_of_week, 'end_time', e.target.value)}
-                      />
+                      <div>
+                        <input
+                          type="time"
+                          className="form-input"
+                          value={rule.start_time}
+                          onChange={(e) => handleTimeChange(rule.day_of_week, 'start_time', e.target.value)}
+                          title="Click to set custom start time (format: HH:MM)"
+                          style={{ cursor: 'pointer' }}
+                        />
+                        <div className="helper-copy" style={{ marginTop: '0.3rem', fontSize: '0.75rem' }}>Start time</div>
+                      </div>
+                      <span style={{ textAlign: 'center', color: 'var(--text-secondary)', fontWeight: 700 }}>→</span>
+                      <div>
+                        <input
+                          type="time"
+                          className="form-input"
+                          value={rule.end_time}
+                          onChange={(e) => handleTimeChange(rule.day_of_week, 'end_time', e.target.value)}
+                          title="Click to set custom end time (format: HH:MM)"
+                          style={{ cursor: 'pointer' }}
+                        />
+                        <div className="helper-copy" style={{ marginTop: '0.3rem', fontSize: '0.75rem' }}>End time</div>
+                      </div>
                     </div>
                   ) : (
+
                     <div className="helper-copy">No bookable hours on this day.</div>
                   )}
 

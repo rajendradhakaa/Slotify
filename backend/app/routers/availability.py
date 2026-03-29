@@ -86,14 +86,20 @@ def get_available_slots(slug: str, date: str = Query(...), db: Session = Depends
     booked = crud.get_booked_slots_for_user(db, event_type.user_id, selected_date)
     booked_ranges = [(b.start_time, b.end_time) for b in booked]
 
-    # Also check if current time slot is in the past (for today)
+    # For today only: get current time in the user's timezone
     now = datetime.utcnow()
+    if selected_date.date() == now.date():
+        # Only apply time cutoff for today, not future dates
+        minimum_time = now
+    else:
+        # For future dates, allow all times within business hours
+        minimum_time = datetime.combine(selected_date.date(), time(0, 0))
 
     while current_time + duration <= end_time:
         slot_end = current_time + duration
 
-        # Skip if in the past
-        if current_time <= now:
+        # Skip if in the past (only for today)
+        if selected_date.date() == now.date() and current_time <= minimum_time:
             current_time += duration
             continue
 
