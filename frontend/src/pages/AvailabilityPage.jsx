@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
 import { availabilityApi } from '../api';
+import useMediaQuery from '../hooks/useMediaQuery';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 export default function AvailabilityPage() {
+  const isCompact = useMediaQuery('(max-width: 900px)');
   const [rules, setRules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -61,13 +63,13 @@ export default function AvailabilityPage() {
 
   return (
     <div className="availability-page" style={{ animation: 'fadeIn 0.4s' }}>
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem', marginTop: '1rem' }}>
-        <h1 className="page-title" style={{ fontSize: '1.75rem', fontWeight: 700, margin: 0 }}>Availability Settings</h1>
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: isCompact ? 'stretch' : 'center', marginBottom: '2.5rem', marginTop: '1rem', gap: '1rem', flexDirection: isCompact ? 'column' : 'row' }}>
+        <h1 className="page-title" style={{ fontSize: isCompact ? '1.5rem' : '1.75rem', fontWeight: 700, margin: 0 }}>Availability Settings</h1>
         <button 
           className="btn btn-primary" 
           onClick={handleSave}
           disabled={saving}
-          style={{ paddingLeft: '2rem', paddingRight: '2rem' }}
+          style={{ paddingLeft: '2rem', paddingRight: '2rem', width: isCompact ? '100%' : 'auto' }}
         >
           {saving ? 'Saving...' : 'Save Changes'}
         </button>
@@ -87,13 +89,15 @@ export default function AvailabilityPage() {
                 key={rule.day_of_week}
                 style={{ 
                   display: 'flex', 
-                  alignItems: 'center', 
+                  alignItems: isCompact ? 'flex-start' : 'center', 
+                  flexDirection: isCompact ? 'column' : 'row',
+                  gap: '1rem',
                   padding: '1.5rem', 
                   borderBottom: '1px solid var(--border)',
                   background: rule.is_active ? 'transparent' : 'rgba(0,0,0,0.02)'
                 }}
               >
-                <div style={{ width: '160px', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <div style={{ width: isCompact ? '100%' : '160px', display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <input 
                     type="checkbox" 
                     checked={rule.is_active}
@@ -106,19 +110,19 @@ export default function AvailabilityPage() {
                 </div>
 
                 {rule.is_active ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', width: isCompact ? '100%' : 'auto' }}>
                     <input 
                       type="time" 
                       className="form-input" 
-                      style={{ width: 'auto', padding: '0.5rem' }}
+                      style={{ width: isCompact ? '100%' : 'auto', padding: '0.5rem' }}
                       value={rule.start_time}
                       onChange={(e) => handleTimeChange(rule.day_of_week, 'start_time', e.target.value)}
                     />
-                    <span>-</span>
+                    <span style={{ width: isCompact ? '100%' : 'auto', textAlign: isCompact ? 'center' : 'left' }}>-</span>
                     <input 
                       type="time" 
                       className="form-input" 
-                      style={{ width: 'auto', padding: '0.5rem' }}
+                      style={{ width: isCompact ? '100%' : 'auto', padding: '0.5rem' }}
                       value={rule.end_time}
                       onChange={(e) => handleTimeChange(rule.day_of_week, 'end_time', e.target.value)}
                     />

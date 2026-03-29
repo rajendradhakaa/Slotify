@@ -3,20 +3,123 @@ import {
   Calendar,
   Clock,
   Link as LinkIcon,
-  Plus,
   HelpCircle,
   Bell,
   ChevronDown
 } from 'lucide-react';
+import useMediaQuery from '../../hooks/useMediaQuery';
 
 export default function Layout() {
   const location = useLocation();
+  const isCompact = useMediaQuery('(max-width: 960px)');
 
   const navItems = [
     { name: 'Scheduling', path: '/event-types', icon: LinkIcon },
     { name: 'Meetings', path: '/meetings', icon: Calendar },
     { name: 'Availability', path: '/availability', icon: Clock },
   ];
+
+  if (isCompact) {
+    return (
+      <div style={{ minHeight: '100vh', background: 'var(--bg-page)' }}>
+        <header style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 50,
+          background: 'rgba(255, 255, 255, 0.96)',
+          backdropFilter: 'blur(16px)',
+          borderBottom: '1px solid var(--border)',
+          padding: '1rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}>
+          <Link to="/event-types" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{
+              width: '36px',
+              height: '36px',
+              background: 'var(--primary)',
+              borderRadius: '10px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white',
+              fontSize: '1.25rem',
+              fontWeight: 800
+            }}>S</div>
+            <div>
+              <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--primary)' }}>Slotify</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Scheduling dashboard</div>
+            </div>
+          </Link>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <button style={{ color: 'var(--text-secondary)' }}><HelpCircle size={18} /></button>
+            <button style={{ color: 'var(--text-secondary)' }}><Bell size={18} /></button>
+            <div style={{
+              width: '34px',
+              height: '34px',
+              borderRadius: '50%',
+              background: '#e9ecef',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              color: 'var(--text-primary)'
+            }}>R</div>
+          </div>
+        </header>
+
+        <main style={{ padding: '1rem 1rem calc(5.75rem + env(safe-area-inset-bottom))' }}>
+          <Outlet />
+        </main>
+
+        <nav style={{
+          position: 'fixed',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 60,
+          display: 'grid',
+          gridTemplateColumns: `repeat(${navItems.length}, minmax(0, 1fr))`,
+          gap: '0.5rem',
+          padding: '0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom))',
+          background: 'rgba(255, 255, 255, 0.96)',
+          backdropFilter: 'blur(18px)',
+          borderTop: '1px solid var(--border)',
+          boxShadow: '0 -12px 32px rgba(26, 26, 26, 0.08)'
+        }}>
+          {navItems.map((item) => {
+            const isActive = location.pathname.startsWith(item.path);
+
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.35rem',
+                  padding: '0.6rem 0.35rem',
+                  borderRadius: '16px',
+                  color: isActive ? 'var(--primary)' : 'var(--text-secondary)',
+                  background: isActive ? 'rgba(0, 107, 255, 0.08)' : 'transparent',
+                  fontWeight: isActive ? 700 : 600,
+                  fontSize: '0.72rem'
+                }}
+              >
+                <item.icon size={18} />
+                <span>{item.name}</span>
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
+    );
+  }
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-page)' }}>
@@ -48,28 +151,6 @@ export default function Layout() {
             }}>S</div>
             <span style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--primary)', letterSpacing: '-0.025em' }}>Slotify</span>
           </div>
-        </div>
-
-        {/* Create Button Container */}
-        <div style={{ padding: '0 1.25rem 1.5rem' }}>
-          <button style={{
-            width: '100%',
-            padding: '0.75rem 1rem',
-            borderRadius: '40px',
-            border: '1px solid var(--border)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0.5rem',
-            fontWeight: 500,
-            fontSize: '1rem',
-            transition: 'all 0.2s',
-            background: 'white',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
-          }}>
-            <Plus size={20} />
-            <span>Create</span>
-          </button>
         </div>
 
         {/* Nav List */}

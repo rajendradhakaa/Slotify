@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Copy, Plus, Trash2, Edit2, Link as LinkIcon, ExternalLink, HelpCircle, Search } from 'lucide-react';
 import { eventTypesApi } from '../api';
+import useMediaQuery from '../hooks/useMediaQuery';
 
 export default function EventTypesPage() {
+  const isCompact = useMediaQuery('(max-width: 900px)');
   const [eventTypes, setEventTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -98,8 +100,8 @@ export default function EventTypesPage() {
   return (
     <div className="event-types-page" style={{ animation: 'fadeIn 0.4s' }}>
       {/* Page Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '2rem', marginTop: '1rem' }}>
-        <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--text-primary)' }}>Scheduling</h1>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '2rem', marginTop: '1rem', flexWrap: 'wrap' }}>
+        <h1 style={{ fontSize: isCompact ? '1.5rem' : '1.75rem', fontWeight: 700, color: 'var(--text-primary)' }}>Scheduling</h1>
         <HelpCircle size={18} color="var(--text-secondary)" style={{ cursor: 'pointer' }} />
       </div>
 
@@ -124,8 +126,8 @@ export default function EventTypesPage() {
       </div>
 
       {/* Controls Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <div style={{ position: 'relative', width: '380px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isCompact ? 'stretch' : 'center', marginBottom: '1.5rem', gap: '1rem', flexDirection: isCompact ? 'column' : 'row' }}>
+        <div style={{ position: 'relative', width: isCompact ? '100%' : '380px' }}>
           <Search size={18} color="#737373" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
           <input 
             type="text" 
@@ -148,14 +150,14 @@ export default function EventTypesPage() {
             setFormData({ name: '', duration: 30, slug: '' });
             setShowForm(!showForm);
           }}
-          style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem' }}
+          style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem', width: isCompact ? '100%' : 'auto' }}
         >
           <Plus size={20} style={{ marginRight: '0.5rem' }} /> Create
         </button>
       </div>
 
       {/* Admin User Row */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isCompact ? 'flex-start' : 'center', marginBottom: '1.5rem', gap: '1rem', flexDirection: isCompact ? 'column' : 'row' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
            <div style={{ 
               width: '32px', 
@@ -173,7 +175,7 @@ export default function EventTypesPage() {
         </div>
         <button 
           onClick={() => window.open('/u/rajendradhaka', '_blank')}
-          style={{ color: 'var(--primary)', fontWeight: 600, fontSize: '0.9375rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+          style={{ color: 'var(--primary)', fontWeight: 600, fontSize: '0.9375rem', display: 'flex', alignItems: 'center', gap: '0.5rem', width: isCompact ? '100%' : 'auto', justifyContent: isCompact ? 'space-between' : 'flex-start' }}
         >
           <ExternalLink size={16} /> View landing page
         </button>
@@ -188,7 +190,7 @@ export default function EventTypesPage() {
               <input type="text" className="form-input" value={formData.name} onChange={handleNameChange} required placeholder="e.g. 30 Minute Meeting" />
             </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isCompact ? '1fr' : '1fr 1fr', gap: '1.5rem' }}>
               <div className="form-group">
                 <label className="form-label">Duration (minutes)</label>
                 <input type="number" className="form-input" value={formData.duration} onChange={(e) => setFormData({...formData, duration: parseInt(e.target.value)})} required min="5" step="5" />
@@ -200,7 +202,7 @@ export default function EventTypesPage() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', flexDirection: isCompact ? 'column' : 'row' }}>
               <button type="submit" className="btn btn-primary">Save Event Type</button>
               <button type="button" className="btn btn-outline" onClick={() => setShowForm(false)}>Cancel</button>
             </div>
@@ -230,9 +232,11 @@ export default function EventTypesPage() {
               key={event.id} 
               className="card" 
               style={{ 
-                padding: '1.5rem 2rem', 
+                padding: isCompact ? '1.25rem 1.25rem 1.25rem 1.5rem' : '1.5rem 2rem', 
                 display: 'flex', 
-                alignItems: 'center', 
+                alignItems: isCompact ? 'stretch' : 'center', 
+                flexDirection: isCompact ? 'column' : 'row',
+                gap: '1rem',
                 position: 'relative', 
                 overflow: 'hidden',
                 transition: 'box-shadow 0.2s',
@@ -244,9 +248,9 @@ export default function EventTypesPage() {
               <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '6px', background: '#9b51e0' }}></div>
 
               {/* Event Content */}
-              <div style={{ flex: 1 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <h3 style={{ fontSize: '1.125rem', fontWeight: 700, marginBottom: '0.25rem' }}>{event.name}</h3>
-                <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', fontWeight: 500, display: 'flex', gap: '0.5rem' }}>
+                <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', fontWeight: 500, display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                   <span>{event.duration} min</span>  •  <span>Google Meet</span>  •  <span>One-on-One</span>
                 </div>
                 <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
@@ -255,7 +259,7 @@ export default function EventTypesPage() {
               </div>
 
               {/* Action Buttons */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', width: isCompact ? '100%' : 'auto', justifyContent: isCompact ? 'space-between' : 'flex-start', flexWrap: 'wrap' }}>
                 <button 
                   onClick={() => copyLink(event.slug)}
                   style={{ 
@@ -267,7 +271,8 @@ export default function EventTypesPage() {
                     color: 'var(--text-primary)',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.5rem'
+                    gap: '0.5rem',
+                    flex: isCompact ? 1 : 'initial'
                   }}
                   onMouseOver={(e) => e.currentTarget.style.background = '#f9f9f9'}
                   onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}

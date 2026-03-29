@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { Clock, Calendar, XCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { bookingsApi } from '../api';
+import useMediaQuery from '../hooks/useMediaQuery';
 
 export default function MeetingsPage() {
+  const isCompact = useMediaQuery('(max-width: 900px)');
   const [activeTab, setActiveTab] = useState('upcoming');
   const [meetings, setMeetings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -69,9 +71,9 @@ export default function MeetingsPage() {
 
   return (
     <div className="meetings-page" style={{ animation: 'fadeIn 0.4s' }}>
-      <h1 className="page-title" style={{ fontSize: '1.75rem', fontWeight: 700, marginBottom: '2rem', marginTop: '1rem' }}>Scheduled Events</h1>
+      <h1 className="page-title" style={{ fontSize: isCompact ? '1.5rem' : '1.75rem', fontWeight: 700, marginBottom: '2rem', marginTop: '1rem' }}>Scheduled Events</h1>
 
-      <div style={{ display: 'flex', gap: '2rem', borderBottom: '1px solid var(--border)', marginBottom: '2rem' }}>
+      <div style={{ display: 'flex', gap: isCompact ? '1rem' : '2rem', borderBottom: '1px solid var(--border)', marginBottom: '2rem', overflowX: 'auto' }}>
         <button 
           onClick={() => setActiveTab('upcoming')}
           style={{ 
@@ -119,16 +121,18 @@ export default function MeetingsPage() {
           </div>
         ) : (
           meetings.map((meeting) => (
-            <div key={meeting.id} className="card" style={{ marginBottom: '1rem', display: 'flex' }}>
+            <div key={meeting.id} className="card" style={{ marginBottom: '1rem', display: 'flex', flexDirection: isCompact ? 'column' : 'row' }}>
               {/* Date Box */}
               <div style={{ 
                 padding: '1.5rem', 
-                borderRight: '1px solid var(--border)', 
+                borderRight: isCompact ? 'none' : '1px solid var(--border)', 
+                borderBottom: isCompact ? '1px solid var(--border)' : 'none',
                 display: 'flex', 
-                flexDirection: 'column', 
+                flexDirection: isCompact ? 'row' : 'column', 
                 alignItems: 'center', 
                 justifyContent: 'center',
-                minWidth: '120px',
+                minWidth: isCompact ? 'auto' : '120px',
+                gap: isCompact ? '0.75rem' : '0.25rem',
                 background: 'rgba(0,0,0,0.02)'
               }}>
                 <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
@@ -144,18 +148,18 @@ export default function MeetingsPage() {
               
               {/* Event Details */}
               <div style={{ padding: '1.5rem', flex: 1, position: 'relative' }}>
-                <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem' }}>
+                <div style={{ position: isCompact ? 'static' : 'absolute', top: '1.5rem', right: '1.5rem', marginBottom: isCompact ? '1rem' : 0, display: 'flex', justifyContent: isCompact ? 'flex-start' : 'initial' }}>
                   {getStatusBadge(meeting.status)}
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem', color: 'var(--text-primary)', fontWeight: 600 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem', color: 'var(--text-primary)', fontWeight: 600, flexWrap: 'wrap' }}>
                   <Clock size={16} /> 
                   {format(new Date(meeting.start_time), "h:mm a")} - {format(new Date(meeting.end_time), "h:mm a")}
                 </div>
                 
                 <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem', fontWeight: 600 }}>{meeting.invitee_name}</h3>
                 
-                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(200px, 1fr) minmax(200px, 1fr)', gap: '1rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isCompact ? '1fr' : 'minmax(200px, 1fr) minmax(200px, 1fr)', gap: '1rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
                   <div>
                     <strong>Event Type</strong><br/>
                     {meeting.event_type_name || `ID: ${meeting.event_type_id}`}
@@ -164,7 +168,7 @@ export default function MeetingsPage() {
                     <strong>Email</strong><br/>
                     <a href={`mailto:${meeting.invitee_email}`} style={{ color: 'inherit', textDecoration: 'underline' }}>{meeting.invitee_email}</a>
                   </div>
-                  <div style={{ gridColumn: 'span 2' }}>
+                  <div style={{ gridColumn: isCompact ? 'auto' : 'span 2' }}>
                     <strong>Created</strong><br/>
                     {format(new Date(meeting.created_at), "MMM d, yyyy 'at' h:mm a")}
                   </div>

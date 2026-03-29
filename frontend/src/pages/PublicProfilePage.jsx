@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Clock, ChevronRight, Calendar } from 'lucide-react';
 import { eventTypesApi } from '../api';
+import useMediaQuery from '../hooks/useMediaQuery';
 
 export default function PublicProfilePage() {
+  const isCompact = useMediaQuery('(max-width: 700px)');
   const [eventTypes, setEventTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -33,7 +35,7 @@ export default function PublicProfilePage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-page)', padding: '4rem 1rem' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-page)', padding: isCompact ? '2.5rem 1rem' : '4rem 1rem' }}>
       <div style={{ maxWidth: '840px', margin: '0 auto' }}>
         {/* Profile Header */}
         <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
@@ -52,14 +54,14 @@ export default function PublicProfilePage() {
             border: '4px solid white',
             boxShadow: 'var(--shadow-sm)'
           }}>R</div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>Rajendra Dhaka</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1.125rem', maxWidth: '600px', margin: '0 auto' }}>
+          <h1 style={{ fontSize: isCompact ? '1.7rem' : '2rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>Rajendra Dhaka</h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: isCompact ? '1rem' : '1.125rem', maxWidth: '600px', margin: '0 auto' }}>
             Welcome to my scheduling page. Please select an event below to book a time with me.
           </p>
         </div>
 
         {/* Event Types Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isCompact ? '1fr' : 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1.5rem' }}>
           {eventTypes.map((event) => (
             <div 
               key={event.id}

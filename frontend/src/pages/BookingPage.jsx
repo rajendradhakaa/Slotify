@@ -3,9 +3,12 @@ import { useParams } from 'react-router-dom';
 import { Clock, Globe, ChevronLeft, ChevronRight, CheckCircle, CalendarPlus } from 'lucide-react';
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, isSameDay, isSameMonth, addDays, isBefore, startOfDay } from 'date-fns';
 import { eventTypesApi, availabilityApi, bookingsApi } from '../api';
+import useMediaQuery from '../hooks/useMediaQuery';
 
 export default function BookingPage() {
   const { slug } = useParams();
+  const isCompact = useMediaQuery('(max-width: 960px)');
+  const isNarrow = useMediaQuery('(max-width: 640px)');
   const [eventType, setEventType] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -211,10 +214,10 @@ export default function BookingPage() {
 
   if (bookingStatus === 'success') {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: 'var(--bg-page)' }}>
-        <div className="card" style={{ width: '100%', maxWidth: '600px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '3rem 2rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: isCompact ? 'auto' : '100vh', background: 'var(--bg-page)', padding: isCompact ? '1rem' : 0 }}>
+        <div className="card" style={{ width: '100%', maxWidth: '600px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: isNarrow ? '2rem 1.25rem' : '3rem 2rem' }}>
           <CheckCircle size={64} color="#1E8E3E" style={{ marginBottom: '1.5rem' }} />
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 600, marginBottom: '0.5rem' }}>You are scheduled</h1>
+          <h1 style={{ fontSize: isNarrow ? '1.5rem' : '1.75rem', fontWeight: 600, marginBottom: '0.5rem' }}>You are scheduled</h1>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>A calendar invitation has been sent to your email address.</p>
           
           <div style={{ width: '100%', border: '1px solid var(--border)', borderRadius: '8px', padding: '1.5rem', textAlign: 'left' }}>
@@ -245,15 +248,15 @@ export default function BookingPage() {
   }
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem 1rem', minHeight: '100vh', background: 'var(--bg-page)' }}>
-      <div className="card booking-container" style={{ width: '100%', maxWidth: selectedDate && !selectedTimeSlot ? '1050px' : '800px', display: 'flex', overflow: 'hidden', padding: 0, minHeight: '400px', transition: 'max-width 0.3s' }}>
+    <div style={{ display: 'flex', justifyContent: 'center', padding: isCompact ? '1.25rem 0.75rem' : '4rem 1rem', minHeight: '100vh', background: 'var(--bg-page)' }}>
+      <div className="card booking-container" style={{ width: '100%', maxWidth: isCompact ? '100%' : (selectedDate && !selectedTimeSlot ? '1050px' : '800px'), display: 'flex', flexDirection: isCompact ? 'column' : 'row', overflow: 'hidden', padding: 0, minHeight: '400px', transition: 'max-width 0.3s' }}>
         
         {/* Left sidebar - Event Details */}
-        <div style={{ width: '320px', borderRight: '1px solid var(--border)', padding: '2rem', flexShrink: 0 }}>
+        <div style={{ width: isCompact ? '100%' : '320px', borderRight: isCompact ? 'none' : '1px solid var(--border)', borderBottom: isCompact ? '1px solid var(--border)' : 'none', padding: isNarrow ? '1.25rem' : '2rem', flexShrink: 0 }}>
           <h2 style={{ color: 'var(--text-secondary)', fontSize: '1rem', fontWeight: 600, marginBottom: '0.25rem' }}>Rajendra Dhaka</h2>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 600, marginBottom: '1.5rem', color: 'var(--text-primary)' }}>{eventType.name}</h1>
+          <h1 style={{ fontSize: isNarrow ? '1.5rem' : '1.75rem', fontWeight: 600, marginBottom: '1.5rem', color: 'var(--text-primary)' }}>{eventType.name}</h1>
           
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--text-secondary)', marginBottom: '1rem', fontWeight: 500 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--text-secondary)', marginBottom: '1rem', fontWeight: 500, flexWrap: 'wrap' }}>
             <Clock size={18} />
             {eventType.duration} min
           </div>
@@ -285,7 +288,7 @@ export default function BookingPage() {
         </div>
 
         {/* Right side - Dynamic Content */}
-        <div style={{ flex: 1, padding: '2rem', display: 'flex' }}>
+        <div style={{ flex: 1, padding: isNarrow ? '1.25rem' : '2rem', display: 'flex', flexDirection: 'column' }}>
           
           {selectedTimeSlot ? (
             /* Booking Form View */
@@ -313,7 +316,7 @@ export default function BookingPage() {
                   />
                 </div>
                 
-                <div style={{ display: 'flex', gap: '1rem' }}>
+                <div style={{ display: 'flex', gap: '1rem', flexDirection: isNarrow ? 'column' : 'row' }}>
                   <button type="submit" className="btn btn-primary" disabled={bookingStatus === 'submitting'} style={{ padding: '0.75rem 1.5rem' }}>
                     {bookingStatus === 'submitting' ? 'Scheduling...' : 'Schedule Event'}
                   </button>
@@ -329,25 +332,25 @@ export default function BookingPage() {
             <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: '1rem' }}>
               
               {bookingResult && (
-                <div style={{ background: '#f8f9fa', padding: '1rem 1.5rem', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #e0e0e0' }}>
+                <div style={{ background: '#f8f9fa', padding: '1rem 1.5rem', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: isCompact ? 'flex-start' : 'center', border: '1px solid #e0e0e0', gap: '1rem', flexDirection: isCompact ? 'column' : 'row' }}>
                   <div>
                     <strong style={{ display: 'block', color: 'var(--text-primary)', marginBottom: '4px' }}>Wait, need to see your last booking?</strong>
                     <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>You can still view the receipt for the meeting you just scheduled.</span>
                   </div>
-                  <button onClick={() => setBookingStatus('success')} className="btn btn-outline" style={{ padding: '0.5rem 1rem', whiteSpace: 'nowrap' }}>
+                  <button onClick={() => setBookingStatus('success')} className="btn btn-outline" style={{ padding: '0.5rem 1rem', whiteSpace: 'nowrap', width: isNarrow ? '100%' : 'auto' }}>
                     View receipt
                   </button>
                 </div>
               )}
 
-              <div style={{ display: 'flex', gap: '2rem' }}>
+              <div style={{ display: 'flex', gap: isCompact ? '1.5rem' : '2rem', flexDirection: isCompact ? 'column' : 'row' }}>
                 <div style={{ flex: 1 }}>
                   <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1.5rem' }}>Select a Date & Time</h2>
-                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '1.5rem', gap: '2rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '1.5rem', gap: isNarrow ? '1rem' : '2rem' }}>
                     <button onClick={() => setCurrentDate(subMonths(currentDate, 1))} style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', padding: '0.5rem', borderRadius: '50%' }}>
                       <ChevronLeft size={20} />
                     </button>
-                    <div style={{ fontWeight: 600, fontSize: '1.1rem' }}>
+                    <div style={{ fontWeight: 600, fontSize: isNarrow ? '1rem' : '1.1rem', textAlign: 'center' }}>
                       {format(currentDate, "MMMM yyyy")}
                     </div>
                     <button onClick={() => setCurrentDate(addMonths(currentDate, 1))} style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', padding: '0.5rem', borderRadius: '50%' }}>
@@ -358,7 +361,7 @@ export default function BookingPage() {
                 </div>
 
                 {selectedDate && (
-                  <div style={{ width: '220px', borderLeft: '1px solid var(--border)', paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ width: isCompact ? '100%' : '220px', borderLeft: isCompact ? 'none' : '1px solid var(--border)', borderTop: isCompact ? '1px solid var(--border)' : 'none', paddingLeft: isCompact ? 0 : '1.5rem', paddingTop: isCompact ? '1.25rem' : 0, display: 'flex', flexDirection: 'column' }}>
                     <h3 style={{ marginBottom: '1rem', fontWeight: 500, color: 'var(--text-secondary)', textAlign: 'center' }}>
                       {fShortDate(selectedDate)}
                     </h3>
@@ -462,6 +465,20 @@ export default function BookingPage() {
         .slot-skeleton { height: 48px; width: 100%; }
         
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        @media (max-width: 640px) {
+          .calendar-day-header {
+            font-size: 0.65rem;
+          }
+
+          .calendar-row {
+            gap: 0.15rem;
+          }
+
+          .calendar-cell {
+            font-size: 0.9rem;
+          }
+        }
       `}</style>
     </div>
   );
